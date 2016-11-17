@@ -29,12 +29,12 @@ class Authentication {
     }
 
     public func getSignature(stringToSign: String) throws -> String {
-        let kDate = try HMAC.make(.sha256, dateStamp().bytes, key: "AWS4\(self.secret)".bytes)
-        let kRegion = try HMAC.make(.sha256, self.region.bytes, key: kDate)
-        let kService = try HMAC.make(.sha256, self.service.bytes, key: kRegion)
-        let kSigning = try HMAC.make(.sha256, "aws4_request".bytes, key: kService)
+        let dateHMAC = try HMAC.make(.sha256, dateStamp().bytes, key: "AWS4\(self.secret)".bytes)
+        let regionHMAC = try HMAC.make(.sha256, self.region.bytes, key: dateHMAC)
+        let serviceHMAC = try HMAC.make(.sha256, self.service.bytes, key: regionHMAC)
+        let signingHMAC = try HMAC.make(.sha256, "aws4_request".bytes, key: serviceHMAC)
 
-        let signature = try HMAC.make(.sha256, stringToSign.bytes, key: kSigning)
+        let signature = try HMAC.make(.sha256, stringToSign.bytes, key: signingHMAC)
 
         return Data(bytes: signature).hexEncodedString()
     }

@@ -1,6 +1,7 @@
 # Nodes AWS
 
 [![codebeat badge](https://codebeat.co/badges/52c2f960-625c-4a63-ae63-52a24d747da1)](https://codebeat.co/projects/github-com-nodes-vapor-aws)
+[![codecov](https://codecov.io/gh/nodes-vapor/aws/branch/master/graph/badge.svg)](https://codecov.io/gh/nodes-vapor/aws)
 
 This package makes it easy to use AWS resources from Swift.
 
@@ -30,6 +31,18 @@ This function will return all EC2 instances
 ```swift
 do {
 	let instances = try EC2(accessKey: "my-key", secretKey: "my-secret", region: "my-region").describeInstances()
+} catch {
+
+}
+```
+
+### S3
+
+**Upload a file to S3**
+
+```swift
+do {
+    try S3(accessKey: "my-key", secretKey: "my-secret", region: "my-region", bucket: "my-s3-bucket").uploadFile("/path/to/file", "/folder-in-s3-bucket")
 } catch {
 
 }
