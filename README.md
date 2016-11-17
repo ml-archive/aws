@@ -24,9 +24,15 @@ let package = Package(
 
 ## Usage
 
-### Describe EC2 instances
+Currently the following AWS Services are available:
+- EC2
+- S3
 
-This function will return all EC2 instances
+If you need other resources you can use Raw call, to call the AWS API directly.
+
+### EC2
+
+**Describe instances**
 
 ```swift
 do {
