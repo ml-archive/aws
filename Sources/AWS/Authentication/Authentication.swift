@@ -40,9 +40,7 @@ class Authentication {
     }
 
     public func canonicalRequest() -> String {
-        var request: String
-
-        request = ""
+        var request: String = ""
 
         let uri = "/"
         let queryString = self.requestParam

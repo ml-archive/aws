@@ -1,10 +1,25 @@
 # Nodes AWS
 
+[![codebeat badge](https://codebeat.co/badges/52c2f960-625c-4a63-ae63-52a24d747da1)](https://codebeat.co/projects/github-com-nodes-vapor-aws)
+
 This package makes it easy to use AWS resources from Swift.
 
 ## Installation
 
-@todo
+### Swift Package Manager
+
+Add the following to your Package.swift file
+
+```swift
+import PackageDescription
+
+let package = Package(
+    name: "YourPackage",
+    dependencies: [
+        .Package(url: "https://github.com/nodes-vapor/aws.git", majorVersion: 1)
+    ]
+)
+```
 
 ## Usage
 
@@ -41,3 +56,7 @@ do {
 
 }
 ```
+
+## Compatibility
+
+This package has been tested on Mac OS X and Ubuntu 16.04
