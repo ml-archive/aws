@@ -28,7 +28,7 @@ class EC2 {
                     baseURL: self.baseURL,
                     key: self.accessKey,
                     secret: self.secretKey,
-                    requestParam: "Action=DescribeInstances")
+                    requestParam: "Action=DescribeRegions&Version=2015-10-01")
         } catch {
 
         }

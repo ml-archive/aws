@@ -23,11 +23,11 @@ class S3 {
     }
 
     public func upload(file: String, folder: String) throws {
-        let method = "PUT"
+        /*let method = "PUT"
 
         do {
 
-        }
+        }*/
     }
 
     public func exist(file: String) {

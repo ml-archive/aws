@@ -2,6 +2,7 @@ import Foundation
 import HMAC
 import Hash
 import Essentials
+import Core
 
 class Authentication {
 
@@ -13,9 +14,9 @@ class Authentication {
     var amzDate: String
     let key: String
     let secret: String
-    let requestParam: String
+    let requestParam: String!
 
-    public init(method: String, service: String, host: String, region: String, baseURL: String, key: String, secret: String, requestParam: String) {
+    public init(method: String, service: String, host: String, region: String, baseURL: String, key: String, secret: String, requestParam: String!) {
         self.method = method
         self.service = service
         self.host = host
@@ -24,50 +25,18 @@ class Authentication {
         self.amzDate = ""
         self.key = key
         self.secret = secret
-        self.requestParam = requestParam
+        self.requestParam = requestParam.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
     }
 
-    public func sign(_ key: String, _ msg: String) -> String {
+    public func getSignature(stringToSign: String) throws -> String {
+        let kDate = try HMAC.make(.sha256, dateStamp().bytes, key: "AWS4\(self.secret)".bytes)
+        let kRegion = try HMAC.make(.sha256, self.region.bytes, key: kDate)
+        let kService = try HMAC.make(.sha256, self.service.bytes, key: kRegion)
+        let kSigning = try HMAC.make(.sha256, "aws4_request".bytes, key: kService)
 
-        var data: [UInt8]
-        var hexString: String
+        let signature = try HMAC.make(.sha256, stringToSign.bytes, key: kSigning)
 
-        hexString = ""
-
-        do {
-            let bytes = try HMAC.make(.sha256, msg, key: key)
-
-            hexString = Data(bytes: bytes).hexEncodedString()
-
-        } catch {
-
-        }
-        return hexString
-    }
-
-    public func createSignature(_ key: String, _ msg: String) -> String {
-        var hexString: String
-
-        hexString = ""
-
-        do {
-            let bytes = try HMAC.make(.sha256, msg, key: key)
-
-            hexString = Data(bytes: bytes).hexEncodedString()
-        } catch {
-
-        }
-        return hexString
-    }
-
-    public func getSignatureKey() -> String {
-        let key = self.secret
-        let kDate = sign("AWS4\(key)", dateStamp())
-        let kRegion = sign(kDate, self.region)
-        let kService = sign(kRegion, self.service)
-        let kSigning = sign(kService, "aws4_request")
-
-        return kSigning
+        return Data(bytes: signature).hexEncodedString()
     }
 
     public func canonicalRequest() -> String {
@@ -98,19 +67,21 @@ class Authentication {
         let credentialScope = "\(dateStamp())/\(self.region)/\(self.service)/aws4_request"
         let canonicalHash: String
         let canonical: [UInt8]
-        var stringToSign: String
-
-        stringToSign = ""
+        var stringToSign: String = ""
 
         do {
-            //print(canonicalRequest())
             canonical = try Hash.make(.sha256, canonicalRequest())
             canonicalHash = Data(bytes: canonical).hexEncodedString()
             stringToSign = "\(algorithm)\n\(amzDate)\n\(credentialScope)\n\(canonicalHash)"
         } catch {
         }
 
-        let signature = createSignature(getSignatureKey(), stringToSign)
+        var signature: String = ""
+        do {
+            signature = try getSignature(stringToSign: stringToSign)
+        } catch {
+
+        }
 
         return "\(algorithm) Credential=\(self.key)/\(credentialScope), SignedHeaders=host;x-amz-date, Signature=\(signature)"
     }

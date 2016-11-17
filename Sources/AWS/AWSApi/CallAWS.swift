@@ -17,10 +17,12 @@ class CallAWS {
 
         let header = headers.joined(separator: " ")
 
+        print("curl -X \(method) \(header) \(baseURL)?\(requestParam)")
+
         do {
             let output = try console.backgroundExecute(program: "/bin/sh", arguments: [
                     "-c",
-                    "curl -X \(method) \(header) \(host)?\(requestParam)"
+                    "curl -X \(method) \(header) \(baseURL)?\(requestParam)"
 
             ])
 
