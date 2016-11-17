@@ -5,6 +5,9 @@
 
 This package makes it easy to use AWS resources from Swift.
 
+## Requirements
+- Swift 3.0+
+
 ## Installation
 
 ### Swift Package Manager
@@ -86,3 +89,6 @@ do {
 ## Compatibility
 
 This package has been tested on Mac OS X and Ubuntu 16.04
+
+## Credits
+Made with ❤️ at [Nodes](http://nodesagency.com).
