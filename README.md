@@ -30,7 +30,10 @@ This function will return all EC2 instances
 
 ```swift
 do {
-	let instances = try EC2(accessKey: "my-key", secretKey: "my-secret", region: "my-region").describeInstances()
+	let instances = try EC2(
+	    accessKey: "my-key", 
+	    secretKey: "my-secret", 
+	    region: "my-region").describeInstances()
 } catch {
 
 }
@@ -42,7 +45,11 @@ do {
 
 ```swift
 do {
-    try S3(accessKey: "my-key", secretKey: "my-secret", region: "my-region", bucket: "my-s3-bucket").uploadFile("/path/to/file", "/folder-in-s3-bucket")
+    try S3(
+        accessKey: "my-key", 
+        secretKey: "my-secret", 
+        region: "my-region", 
+        bucket: "my-s3-bucket").uploadFile("/path/to/file", "/folder-in-s3-bucket")
 } catch {
 
 }
