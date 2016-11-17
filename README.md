@@ -1,7 +1,12 @@
 # Nodes AWS
 
+![Swift](http://img.shields.io/badge/swift-3.0-brightgreen.svg)
 [![codebeat badge](https://codebeat.co/badges/52c2f960-625c-4a63-ae63-52a24d747da1)](https://codebeat.co/projects/github-com-nodes-vapor-aws)
 [![codecov](https://codecov.io/gh/nodes-vapor/aws/branch/master/graph/badge.svg)](https://codecov.io/gh/nodes-vapor/aws)
+[![Readme Score](http://readme-score-api.herokuapp.com/score.svg?url=https://github.com/nodes-vapor/aws)](http://clayallsopp.github.io/readme-score?url=https://github.com/nodes-vapor/aws)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/nodes-ios/Serializable/blob/master/LICENSE) 
+![Swift Package Manager](https://img.shields.io/badge/SPM-compatible-brightgreen.svg) 
+
 
 This package makes it easy to use AWS resources from Swift.
 
