@@ -10,10 +10,10 @@
 
 This package makes it easy to use AWS resources from Swift.
 
-## Requirements
+## 📝 Requirements
 - Swift 3.0+
 
-## Installation
+## 📦 Installation
 
 ### Swift Package Manager
 
@@ -30,7 +30,7 @@ let package = Package(
 )
 ```
 
-## Usage
+## 💻 Usage
 
 Currently the following AWS Services are available:
 - EC2
@@ -91,9 +91,12 @@ do {
 }
 ```
 
-## Compatibility
+## 🔧 Compatibility
 
 This package has been tested on Mac OS X and Ubuntu 16.04
 
-## Credits
+## 👥 Credits
 Made with ❤️ at [Nodes](http://nodesagency.com).
+
+## 📄 License
+**AWS** is available under the MIT license. See the [LICENSE](https://github.com/nodes-ios/Serializable/blob/master/LICENSE) file for more info.
