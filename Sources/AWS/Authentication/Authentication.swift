@@ -1,12 +1,17 @@
-import Foundation
-import HMAC
-import Hash
-import Essentials
 import Core
+import Hash
+import HMAC
+import HTTP
+import Essentials
+import Foundation
 
 class Authentication {
-
-    let method: String
+    enum Method {
+        case get
+        case post
+    }
+    
+    let method: Method
     let service: String
     let host: String
     let region: String
@@ -16,7 +21,7 @@ class Authentication {
     let secret: String
     let requestParam: String!
 
-    public init(method: String, service: String, host: String, region: String, baseURL: String, key: String, secret: String, requestParam: String!) {
+    public init(method: Method, service: String, host: String, region: String, baseURL: String, key: String, secret: String, requestParam: String!) {
         self.method = method
         self.service = service
         self.host = host
@@ -84,11 +89,12 @@ class Authentication {
         return "\(algorithm) Credential=\(self.key)/\(credentialScope), SignedHeaders=host;x-amz-date, Signature=\(signature)"
     }
 
-    public func getAWSHeaders() -> Array<String> {
+    public func getAWSHeaders() -> [HeaderKey : String] {
         amzDateHeader()
-
-        return ["-H \"Authorization: \(authorizationHeader())\"",
-                "-H \"x-amz-date: \(amzDate)\""]
+        return [
+            "Authorization": authorizationHeader(),
+            "x-amz-date": amzDate
+        ]
     }
 
     public func amzDateHeader() {

@@ -1,9 +1,6 @@
 import Foundation
-import Console
 
 class S3 {
-    let console: ConsoleProtocol = Terminal(arguments: CommandLine.arguments)
-
     let accessKey: String
     let keySecret: String
     let region: String
