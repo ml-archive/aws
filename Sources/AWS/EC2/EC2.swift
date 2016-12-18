@@ -1,7 +1,6 @@
 import Foundation
 
 class EC2 {
-
     let accessKey: String
     let secretKey: String
     let region: String
@@ -19,20 +18,18 @@ class EC2 {
     }
 
     public func describeInstances() throws -> String {
-        do {
-            return try CallAWS().call(
-                    method: "GET",
-                    service: self.service,
-                    host: self.host,
-                    region: self.region,
-                    baseURL: self.baseURL,
-                    key: self.accessKey,
-                    secret: self.secretKey,
-                    requestParam: "Action=DescribeRegions&Version=2015-10-01")
-        } catch {
-
-        }
-
-        return ""
+        //TODO(Brett): wrap this result in a model instead of a string type
+        let response =  try CallAWS().call(
+            method: .get,
+            service: service,
+            host: host,
+            region: region,
+            baseURL: baseURL,
+            key: accessKey,
+            secret: secretKey,
+            requestParam: "Action=DescribeRegions&Version=2015-10-01"
+        )
+        
+        return response.description
     }
 }

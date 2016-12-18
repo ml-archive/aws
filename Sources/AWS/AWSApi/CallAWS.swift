@@ -1,10 +1,21 @@
-import Foundation
-import Console
+import HTTP
+import Transport
 
 class CallAWS {
-    let console: ConsoleProtocol = Terminal(arguments: CommandLine.arguments)
-
-    public func call(method: String, service: String, host: String, region: String, baseURL: String, key: String, secret: String, requestParam: String) throws -> String {
+    enum Error: Swift.Error {
+        case unsupported(String)
+    }
+    
+    public func call(
+        method: Authentication.Method,
+        service: String,
+        host: String,
+        region: String,
+        baseURL: String,
+        key: String,
+        secret: String,
+        requestParam: String
+    ) throws -> Response {
         let headers = Authentication(
                 method: method,
                 service: service,
@@ -13,24 +24,21 @@ class CallAWS {
                 baseURL: baseURL,
                 key: key,
                 secret: secret,
-                requestParam: requestParam).getAWSHeaders()
+                requestParam: requestParam
+            ).getAWSHeaders()
 
-        let header = headers.joined(separator: " ")
-
-        print("curl -X \(method) \(header) \(baseURL)?\(requestParam)")
-
-        do {
-            let output = try console.backgroundExecute(program: "/bin/sh", arguments: [
-                    "-c",
-                    "curl -X \(method) \(header) \(baseURL)?\(requestParam)"
-
-            ])
-
-            return output
-        } catch ConsoleError.backgroundExecute(_, let message, _) {
-            console.error(message.string)
+        let response: Response
+        switch method {
+        case .get:
+            response = try BasicClient.get(
+                "\(baseURL)?\(requestParam)",
+                headers: headers
+            )
+            
+        case .post:
+            throw Error.unsupported("POST")
         }
-
-        return ""
+        
+        return response
     }
 }
