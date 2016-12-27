@@ -28,6 +28,10 @@ struct Authentication {
         charactersIn: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~="
     )
     
+    static let awsPathAllowed = CharacterSet(
+        charactersIn: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~/"
+    )
+    
     var amzDate: String {
         let dateFormatter = DateFormatter()
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
@@ -50,7 +54,9 @@ struct Authentication {
         self.host = host
         self.region = region
         //TODO(Brett): Proper encoding and error handling.
-        self.baseURL = baseURL.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!
+        self.baseURL = baseURL.addingPercentEncoding(
+            withAllowedCharacters: Authentication.awsPathAllowed
+        )!
         self.key = key
         self.secret = secret
         self.requestParam = requestParam?.addingPercentEncoding(
