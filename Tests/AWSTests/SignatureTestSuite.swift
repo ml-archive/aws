@@ -17,6 +17,8 @@ class SignatureTestSuite: XCTestCase {
         ("testGetVanilla", testGetVanilla),
         ("testGetVanillaQuery", testGetVanillaQuery),
         ("testGetVanillaEmptyQueryKey", testGetVanillaEmptyQueryKey),
+        ("testGetVanillaQueryUnreserved", testGetVanillaQueryUnreserved),
+        ("testGetVanillaQueryUTF8", testGetVanillaQueryUTF8),
         ("testPostVanilla", testPostVanilla),
         ("testPostVanillaQuery", testPostVanillaQuery),
         ("testPostVanillaQueryNonunreserved", testPostVanillaQueryNonunreserved)
@@ -139,6 +141,24 @@ class SignatureTestSuite: XCTestCase {
             path: "/",
             requestParam:"-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz=-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         )
+        result.expect(
+            canonicalRequest: expectedCanonicalRequest,
+            credentialScope: expectedCredentialScope,
+            canonicalHeaders: expectedCanonicalHeaders
+        )
+    }
+    
+    func testGetVanillaQueryUTF8() {
+        let expectedCanonicalRequest = "GET\n/\n%E1%88%B4=bar\nhost:example.amazonaws.com\nx-amz-date:20150830T123600Z\n\nhost;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        
+        let expectedCredentialScope = "20150830/us-east-1/service/aws4_request"
+        
+        let expectedCanonicalHeaders: [HeaderKey : String] = [
+            "X-Amz-Date": "20150830T123600Z",
+            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=2cdec8eed098649ff3a119c94853b13c643bcf08f8b0a1d91e12c9027818dd04"
+        ]
+        
+        let result = sign(method: .get, path: "/", requestParam: "ሴ=bar")
         result.expect(
             canonicalRequest: expectedCanonicalRequest,
             credentialScope: expectedCredentialScope,
