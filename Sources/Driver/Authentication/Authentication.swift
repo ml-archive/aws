@@ -25,7 +25,7 @@ struct Authentication {
     var unitTestDate: Date?
 
     static let awsQueryAllowed = CharacterSet(
-        charactersIn: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ="
+        charactersIn: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~="
     )
     
     var amzDate: String {
