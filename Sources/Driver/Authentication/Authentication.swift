@@ -23,14 +23,6 @@ struct Authentication {
     
     //used for unit tests
     var unitTestDate: Date?
-
-    static let awsQueryAllowed = CharacterSet(
-        charactersIn: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~="
-    )
-    
-    static let awsPathAllowed = CharacterSet(
-        charactersIn: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~/"
-    )
     
     var amzDate: String {
         let dateFormatter = DateFormatter()
@@ -54,14 +46,10 @@ struct Authentication {
         self.host = host
         self.region = region
         //TODO(Brett): Proper encoding and error handling.
-        self.baseURL = baseURL.addingPercentEncoding(
-            withAllowedCharacters: Authentication.awsPathAllowed
-        )!
+        self.baseURL = try! baseURL.percentEncode(allowing: Byte.awsPathAllowed)
         self.key = key
         self.secret = secret
-        self.requestParam = requestParam?.addingPercentEncoding(
-            withAllowedCharacters: Authentication.awsQueryAllowed
-        )
+        self.requestParam = try! requestParam?.percentEncode(allowing: Byte.awsQueryAllowed)
     }
 
     func getSignature(stringToSign: String) throws -> String {
