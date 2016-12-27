@@ -12,6 +12,8 @@ import Foundation
 
 class SignatureTestSuite: XCTestCase {
     static var allTests = [
+        ("testGetUnreserved", testGetUnreserved),
+        ("testGetUTF8", testGetUTF8),
         ("testPostVanilla", testPostVanilla),
         ("testPostVanillaQuery", testPostVanillaQuery),
         ("testPostVanillaQueryNonunreserved", testPostVanillaQueryNonunreserved)
@@ -24,6 +26,45 @@ class SignatureTestSuite: XCTestCase {
         return _dateFormatter
     }()
     
+    func testGetUnreserved() {
+        let expectedCanonicalRequest = "GET\n/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\n\nhost:example.amazonaws.com\nx-amz-date:20150830T123600Z\n\nhost;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        
+        let expectedCredentialScope = "20150830/us-east-1/service/aws4_request"
+        
+        let expectedCanonicalHeaders: [HeaderKey : String] = [
+            "X-Amz-Date": "20150830T123600Z",
+            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=07ef7494c76fa4850883e2b006601f940f8a34d404d0cfa977f52a65bbf5f24f"
+        ]
+        
+        let result = sign(
+            method: .get,
+            path: "/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+        )
+        result.expect(
+            canonicalRequest: expectedCanonicalRequest,
+            credentialScope: expectedCredentialScope,
+            canonicalHeaders: expectedCanonicalHeaders
+        )
+    }
+    
+    func testGetUTF8() {
+        let expectedCanonicalRequest = "GET\n/%E1%88%B4\n\nhost:example.amazonaws.com\nx-amz-date:20150830T123600Z\n\nhost;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        
+        let expectedCredentialScope = "20150830/us-east-1/service/aws4_request"
+        
+        let expectedCanonicalHeaders: [HeaderKey : String] = [
+            "X-Amz-Date": "20150830T123600Z",
+            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=8318018e0b0f223aa2bbf98705b62bb787dc9c0e678f255a891fd03141be5d85"
+        ]
+        
+        let result = sign(method: .get, path: "/ሴ")
+        result.expect(
+            canonicalRequest: expectedCanonicalRequest,
+            credentialScope: expectedCredentialScope,
+            canonicalHeaders: expectedCanonicalHeaders
+        )
+    }
+    
     func testPostVanilla() {
         let expectedCanonicalRequest = "POST\n/\n\nhost:example.amazonaws.com\nx-amz-date:20150830T123600Z\n\nhost;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         
@@ -34,7 +75,7 @@ class SignatureTestSuite: XCTestCase {
             "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=5da7c1a2acd57cee7505fc6676e4e544621c30862966e37dddb68e92efbe5d6b"
         ]
         
-        let result = post(path: "/")
+        let result = sign(method: .post, path: "/")
         result.expect(
             canonicalRequest: expectedCanonicalRequest,
             credentialScope: expectedCredentialScope,
@@ -52,7 +93,7 @@ class SignatureTestSuite: XCTestCase {
             "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=28038455d6de14eafc1f9222cf5aa6f1a96197d7deb8263271d420d138af7f11"
         ]
         
-        let result = post(path: "/", requestParam: "Param1=value1")
+        let result = sign(method: .post, path: "/", requestParam: "Param1=value1")
         result.expect(
             canonicalRequest: expectedCanonicalRequest,
             credentialScope: expectedCredentialScope,
@@ -70,7 +111,7 @@ class SignatureTestSuite: XCTestCase {
             "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=88d3e39e4fa54b971f51c0a09140368e1a51aafb76c4652d9998f93cf3038074"
         ]
         
-        let result = post(path: "/", requestParam: "@#$%^&+=/,?><`\";:\\|][{}")
+        let result = sign(method: .post, path: "/", requestParam: "@#$%^&+=/,?><`\";:\\|][{}")
         result.expect(
             canonicalRequest: expectedCanonicalRequest,
             credentialScope: expectedCredentialScope,
@@ -85,9 +126,13 @@ extension SignatureTestSuite {
         return SignatureTestSuite.dateFormatter.date(from: "20150830T123600Z")!
     }
     
-    func post(path: String, requestParam: String? = nil) -> SignerResult {
+    func sign(
+        method: Driver.Authentication.Method,
+        path: String,
+        requestParam: String? = nil
+    ) -> SignerResult {
         var auth = Driver.Authentication(
-            method: .post,
+            method: method,
             service: "service",
             host: "example.amazonaws.com",
             region: "us-east-1",

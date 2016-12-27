@@ -49,7 +49,8 @@ struct Authentication {
         self.service = service
         self.host = host
         self.region = region
-        self.baseURL = baseURL
+        //TODO(Brett): Proper encoding and error handling.
+        self.baseURL = baseURL.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!
         self.key = key
         self.secret = secret
         self.requestParam = requestParam?.addingPercentEncoding(
@@ -75,7 +76,7 @@ struct Authentication {
     func getCanonicalRequest() -> String {
         var request: String = ""
 
-        let uri = "/"
+        let uri = baseURL
         let queryString = self.requestParam ?? ""
         let headers = "host:\(host)\nx-amz-date:\(amzDate)\n"
         let signedHeaders = "host;x-amz-date"
