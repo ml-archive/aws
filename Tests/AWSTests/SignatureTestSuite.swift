@@ -13,7 +13,8 @@ import Foundation
 class SignatureTestSuite: XCTestCase {
     static var allTests = [
         ("testPostVanilla", testPostVanilla),
-        ("testPostVanillaEmptyQuery", testPostVanillaEmptyQuery)
+        ("testPostVanillaQuery", testPostVanillaQuery),
+        ("testPostVanillaQueryNonunreserved", testPostVanillaQueryNonunreserved)
     ]
     
     static let dateFormatter: DateFormatter  = {
@@ -41,7 +42,7 @@ class SignatureTestSuite: XCTestCase {
         )
     }
     
-    func testPostVanillaEmptyQuery() {
+    func testPostVanillaQuery() {
         let expectedCanonicalRequest = "POST\n/\nParam1=value1\nhost:example.amazonaws.com\nx-amz-date:20150830T123600Z\n\nhost;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         
         let expectedCredentialScope = "20150830/us-east-1/service/aws4_request"
@@ -57,6 +58,25 @@ class SignatureTestSuite: XCTestCase {
             credentialScope: expectedCredentialScope,
             canonicalHeaders: expectedCanonicalHeaders
         )
+    }
+    
+    func testPostVanillaQueryNonunreserved() {
+        let expectedCanonicalRequest = "POST\n/\n%40%23%24%25%5E%26%2B=%2F%2C%3F%3E%3C%60%22%3B%3A%5C%7C%5D%5B%7B%7D\nhost:example.amazonaws.com\nx-amz-date:20150830T123600Z\n\nhost;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        
+        let expectedCredentialScope = "20150830/us-east-1/service/aws4_request"
+        
+        let expectedCanonicalHeaders: [HeaderKey : String] = [
+            "X-Amz-Date": "20150830T123600Z",
+            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=88d3e39e4fa54b971f51c0a09140368e1a51aafb76c4652d9998f93cf3038074"
+        ]
+        
+        let result = post(path: "/", requestParam: "@#$%^&+=/,?><`\";:\\|][{}")
+        result.expect(
+            canonicalRequest: expectedCanonicalRequest,
+            credentialScope: expectedCredentialScope,
+            canonicalHeaders: expectedCanonicalHeaders
+        )
+
     }
 }
 
