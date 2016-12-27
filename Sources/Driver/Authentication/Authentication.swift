@@ -24,7 +24,9 @@ struct Authentication {
     //used for unit tests
     var unitTestDate: Date?
 
-    static let awsQueryAllowed = CharacterSet(charactersIn: "=").union(.alphanumerics)
+    static let awsQueryAllowed = CharacterSet.alphanumerics.union(
+        CharacterSet(charactersIn: "=")
+    )
     
     var amzDate: String {
         let dateFormatter = DateFormatter()
