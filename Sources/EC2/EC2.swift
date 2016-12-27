@@ -19,7 +19,7 @@ class EC2 {
 
     public func describeInstances() throws -> String {
         //TODO(Brett): wrap this result in a model instead of a string type
-        let response =  try CallAWS().call(
+        /*let response =  try AWSDriver().call(
             method: .get,
             service: service,
             host: host,
@@ -30,6 +30,7 @@ class EC2 {
             requestParam: "Action=DescribeRegions&Version=2015-10-01"
         )
         
-        return response.description
+        return response.description*/
+        return ""
     }
 }

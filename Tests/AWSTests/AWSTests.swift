@@ -1,5 +1,4 @@
 import XCTest
-@testable import AWS
 
 class AWSTests: XCTestCase {
     static var allTests = [

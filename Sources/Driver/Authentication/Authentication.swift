@@ -5,10 +5,11 @@ import HTTP
 import Essentials
 import Foundation
 
-class Authentication {
-    enum Method {
-        case get
-        case post
+struct Authentication {
+    enum Method: String {
+        case get = "GET"
+        case put = "PUT"
+        case post = "POST"
     }
     
     let method: Method
@@ -16,24 +17,54 @@ class Authentication {
     let host: String
     let region: String
     let baseURL: String
-    var amzDate: String
     let key: String
     let secret: String
-    let requestParam: String!
+    let requestParam: String?
+    
+    //used for unit tests
+    var unitTestDate: Date?
 
-    public init(method: Method, service: String, host: String, region: String, baseURL: String, key: String, secret: String, requestParam: String!) {
+    static let awsQueryAllowed = CharacterSet(
+        charactersIn: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~="
+    )
+    
+    static let awsPathAllowed = CharacterSet(
+        charactersIn: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~/"
+    )
+    
+    var amzDate: String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        dateFormatter.dateFormat = "YYYYMMdd'T'HHmmss'Z'"
+        return dateFormatter.string(from: unitTestDate ?? Date())
+    }
+
+    init(
+        method: Method,
+        service: String,
+        host: String,
+        region: String,
+        baseURL: String,
+        key: String,
+        secret: String,
+        requestParam: String? = nil
+    ) {
         self.method = method
         self.service = service
         self.host = host
         self.region = region
-        self.baseURL = baseURL
-        self.amzDate = ""
+        //TODO(Brett): Proper encoding and error handling.
+        self.baseURL = baseURL.addingPercentEncoding(
+            withAllowedCharacters: Authentication.awsPathAllowed
+        )!
         self.key = key
         self.secret = secret
-        self.requestParam = requestParam.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
+        self.requestParam = requestParam?.addingPercentEncoding(
+            withAllowedCharacters: Authentication.awsQueryAllowed
+        )
     }
 
-    public func getSignature(stringToSign: String) throws -> String {
+    func getSignature(stringToSign: String) throws -> String {
         let dateHMAC = try HMAC.make(.sha256, dateStamp().bytes, key: "AWS4\(self.secret)".bytes)
         let regionHMAC = try HMAC.make(.sha256, self.region.bytes, key: dateHMAC)
         let serviceHMAC = try HMAC.make(.sha256, self.service.bytes, key: regionHMAC)
@@ -44,11 +75,15 @@ class Authentication {
         return Data(bytes: signature).hexEncodedString()
     }
 
-    public func canonicalRequest() -> String {
+    func getCredentialScope() -> String {
+        return "\(dateStamp())/\(self.region)/\(self.service)/aws4_request"
+    }
+    
+    func getCanonicalRequest() -> String {
         var request: String = ""
 
-        let uri = "/"
-        let queryString = self.requestParam
+        let uri = baseURL
+        let queryString = self.requestParam ?? ""
         let headers = "host:\(host)\nx-amz-date:\(amzDate)\n"
         let signedHeaders = "host;x-amz-date"
         var payload: [UInt8]
@@ -57,24 +92,25 @@ class Authentication {
         do {
             payload = try Hash.make(.sha256, "")
             payloadHash = Data(bytes: payload).hexEncodedString()
-            request = "\(method)\n\(uri)\n\(queryString)\n\(headers)\n\(signedHeaders)\n\(payloadHash)"
+            request = "\(method.rawValue)\n\(uri)\n\(queryString)\n\(headers)\n\(signedHeaders)\n\(payloadHash)"
         } catch {
 
         }
 
         return request
     }
-
-    public func authorizationHeader() -> String {
+    
+    func authorizationHeader() -> String {
         let algorithm = "AWS4-HMAC-SHA256"
-        let credentialScope = "\(dateStamp())/\(self.region)/\(self.service)/aws4_request"
+        let credentialScope = getCredentialScope()
         let canonicalHash: String
         let canonical: [UInt8]
         var stringToSign: String = ""
 
         do {
-            canonical = try Hash.make(.sha256, canonicalRequest())
+            canonical = try Hash.make(.sha256, getCanonicalRequest())
             canonicalHash = Data(bytes: canonical).hexEncodedString()
+            //TODO(Brett): pull out to make testable
             stringToSign = "\(algorithm)\n\(amzDate)\n\(credentialScope)\n\(canonicalHash)"
         } catch {
         }
@@ -89,26 +125,15 @@ class Authentication {
         return "\(algorithm) Credential=\(self.key)/\(credentialScope), SignedHeaders=host;x-amz-date, Signature=\(signature)"
     }
 
-    public func getAWSHeaders() -> [HeaderKey : String] {
-        amzDateHeader()
+     func getCanonicalHeaders() -> [HeaderKey : String] {
         return [
-            "Authorization": authorizationHeader(),
-            "x-amz-date": amzDate
+            "X-Amz-Date": amzDate,
+            "Authorization": authorizationHeader()
         ]
     }
 
-    public func amzDateHeader() {
-        let date = Date()
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        dateFormatter.dateFormat = "YYYYMMdd'T'HHmmss'Z'"
-
-        self.amzDate = dateFormatter.string(from: date)
-    }
-
-    public func dateStamp() -> String {
-        let date = Date()
+    func dateStamp() -> String {
+        let date = unitTestDate ?? Date()
 
         let dateFormatter = DateFormatter()
 
