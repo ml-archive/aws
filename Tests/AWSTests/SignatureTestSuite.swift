@@ -14,6 +14,7 @@ class SignatureTestSuite: XCTestCase {
     static var allTests = [
         ("testGetUnreserved", testGetUnreserved),
         ("testGetUTF8", testGetUTF8),
+        ("testGetVanilla", testGetVanilla),
         ("testPostVanilla", testPostVanilla),
         ("testPostVanillaQuery", testPostVanillaQuery),
         ("testPostVanillaQueryNonunreserved", testPostVanillaQueryNonunreserved)
@@ -58,6 +59,24 @@ class SignatureTestSuite: XCTestCase {
         ]
         
         let result = sign(method: .get, path: "/ሴ")
+        result.expect(
+            canonicalRequest: expectedCanonicalRequest,
+            credentialScope: expectedCredentialScope,
+            canonicalHeaders: expectedCanonicalHeaders
+        )
+    }
+    
+    func testGetVanilla() {
+        let expectedCanonicalRequest = "GET\n/\n\nhost:example.amazonaws.com\nx-amz-date:20150830T123600Z\n\nhost;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        
+        let expectedCredentialScope = "20150830/us-east-1/service/aws4_request"
+        
+        let expectedCanonicalHeaders: [HeaderKey : String] = [
+            "X-Amz-Date": "20150830T123600Z",
+            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=5fa00fa31553b73ebf1942676e86291e8372ff2a2260956d9b8aae1d763fbf31"
+        ]
+        
+        let result = sign(method: .get, path: "/")
         result.expect(
             canonicalRequest: expectedCanonicalRequest,
             credentialScope: expectedCredentialScope,
