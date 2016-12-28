@@ -118,7 +118,7 @@ class SignatureTestSuite: XCTestCase {
             "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=a67d582fa61cc504c4bae71f336f98b97f1ea3c7a6bfe1b6e45aec72011b9aeb"
         ]
         
-        let result = sign(method: .get, path: "/", requestParam: "Param1=value1")
+        let result = sign(method: .get, path: "/", query: "Param1=value1")
         result.expect(
             canonicalRequest: expectedCanonicalRequest,
             credentialScope: expectedCredentialScope,
@@ -139,7 +139,7 @@ class SignatureTestSuite: XCTestCase {
         let result = sign(
             method: .get,
             path: "/",
-            requestParam:"-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz=-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+            query:"-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz=-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         )
         result.expect(
             canonicalRequest: expectedCanonicalRequest,
@@ -158,7 +158,7 @@ class SignatureTestSuite: XCTestCase {
             "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=2cdec8eed098649ff3a119c94853b13c643bcf08f8b0a1d91e12c9027818dd04"
         ]
         
-        let result = sign(method: .get, path: "/", requestParam: "ሴ=bar")
+        let result = sign(method: .get, path: "/", query: "ሴ=bar")
         result.expect(
             canonicalRequest: expectedCanonicalRequest,
             credentialScope: expectedCredentialScope,
@@ -194,7 +194,7 @@ class SignatureTestSuite: XCTestCase {
             "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=28038455d6de14eafc1f9222cf5aa6f1a96197d7deb8263271d420d138af7f11"
         ]
         
-        let result = sign(method: .post, path: "/", requestParam: "Param1=value1")
+        let result = sign(method: .post, path: "/", query: "Param1=value1")
         result.expect(
             canonicalRequest: expectedCanonicalRequest,
             credentialScope: expectedCredentialScope,
@@ -212,7 +212,7 @@ class SignatureTestSuite: XCTestCase {
             "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=88d3e39e4fa54b971f51c0a09140368e1a51aafb76c4652d9998f93cf3038074"
         ]
         
-        let result = sign(method: .post, path: "/", requestParam: "@#$%^&+=/,?><`\";:\\|][{}")
+        let result = sign(method: .post, path: "/", query: "@#$%^&+=/,?><`\";:\\|][{}")
         result.expect(
             canonicalRequest: expectedCanonicalRequest,
             credentialScope: expectedCredentialScope,
@@ -228,26 +228,30 @@ extension SignatureTestSuite {
     }
     
     func sign(
-        method: Driver.Authentication.Method,
+        method: Driver.AWSSignatureV4.Method,
         path: String,
-        requestParam: String? = nil
+        query: String = ""
     ) -> SignerResult {
-        var auth = Driver.Authentication(
-            method: method,
+        var auth = AWSSignatureV4(
             service: "service",
             host: "example.amazonaws.com",
             region: "us-east-1",
-            baseURL: path,
-            key: "AKIDEXAMPLE",
-            secret: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
-            requestParam: requestParam
+            accessKey: "AKIDEXAMPLE",
+            secretKey: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
         )
         
         auth.unitTestDate = testDate
         
-        let canonicalRequest = auth.getCanonicalRequest()
+        let canonicalRequest = try! auth.getCanonicalRequest(method: method, path: path, query: query)
         let credentialScope = auth.getCredentialScope()
-        let canonicalHeaders = auth.getCanonicalHeaders()
+        
+        //FIXME(Brett): handle throwing
+        let canonicalHeaders = try! auth.sign(
+            payload: .none,
+            method: method,
+            path: path,
+            query: query
+        )
         
         return SignerResult(
             canonicalRequest: canonicalRequest,
