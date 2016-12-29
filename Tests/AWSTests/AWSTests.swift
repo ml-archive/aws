@@ -1,4 +1,7 @@
 import XCTest
+import HTTP
+import Transport
+@testable import Driver
 
 class AWSTests: XCTestCase {
     static var allTests = [

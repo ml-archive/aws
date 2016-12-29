@@ -1,15 +1,6 @@
 import HTTP
 import Transport
-
-public enum AccessControlList: String {
-    case privateAccess = "private"
-    case publicRead = "public-read"
-    case publicReadWrite = "public-read-write"
-    case awsExecRead = "aws-exec-read"
-    case authenticatedRead = "authenticated-read"
-    case bucketOwnerRead = "bucket-owner-read"
-    case bucketOwnerFullControl = "bucket-owner-full-control"
-}
+import Foundation
 
 class AWSDriver {
     enum Error: Swift.Error {
@@ -26,8 +17,8 @@ class AWSDriver {
         
     }
     
-    public func call(authentication: Authentication) throws -> Response {
-        let headers = authentication.getCanonicalHeaders()
+    public func call(authentication: AWSSignatureV4) throws -> Response {
+        /*let headers = authentication.getCanonicalHeaders()
 
         let response: Response
         switch authentication.method {
@@ -41,6 +32,8 @@ class AWSDriver {
             throw Error.unsupported("method: \(authentication.method)")
         }
         
-        return response
+        return response*/
+        
+        throw Error.unsupported("call(authentiction:)")
     }
 }

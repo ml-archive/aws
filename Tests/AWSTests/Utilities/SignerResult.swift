@@ -18,6 +18,9 @@ extension SignerResult {
     ) {
         XCTAssertEqual(self.canonicalRequest, canonicalRequest, file: file, line: line)
         XCTAssertEqual(self.credentialScope, credentialScope, file: file, line: line)
-        XCTAssertEqual(self.canonicalHeaders, canonicalHeaders, file: file, line: line)
+
+        canonicalHeaders.forEach {
+            XCTAssertEqual(self.canonicalHeaders[$0.key], $0.value, file: file, line: line)
+        }
     }
 }

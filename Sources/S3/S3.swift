@@ -2,12 +2,9 @@ import Core
 import HTTP
 import Driver
 import Transport
-import S3SignerAWS
 
-@_exported import enum S3SignerAWS.Region
-
-struct S3 {
-    let s3Signer: S3SignerAWS
+public struct S3 {
+    let signer: AWSSignatureV4?
     let bucket: String
     let isVirtualHosted: Bool
     
@@ -18,12 +15,7 @@ struct S3 {
         bucket: String,
         isBucketVirtualHosted: Bool = false
     ) {
-        s3Signer = S3SignerAWS(
-            accessKey: accessKey,
-            secretKey: secretKey,
-            region: region
-        )
-        
+        signer = nil
         self.bucket = bucket
         self.isVirtualHosted = isBucketVirtualHosted
     }
@@ -34,14 +26,16 @@ struct S3 {
     public func get(path: String) throws -> Response {
         let url = generateURL(for: path)
         
+        /*
         let headers = try s3Signer.authHeaderV4(
             httpMethod: .get,
             urlString: url,
             headers: [:],
             payload: .none
         ).vaporHeaders
+        */
         
-        return try BasicClient.get(url, headers: headers)
+        return try BasicClient.get(url, headers: [:])
     }
     
     public func exist(file: String) {
