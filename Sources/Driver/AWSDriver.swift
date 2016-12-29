@@ -1,5 +1,6 @@
 import HTTP
 import Transport
+import Foundation
 
 class AWSDriver {
     enum Error: Swift.Error {

@@ -17,6 +17,7 @@ public enum AccessControlList: String {
 
 public struct AWSSignatureV4 {
     public enum Method: String {
+        case delete = "DELETE"
         case get = "GET"
         case post = "POST"
         case put = "PUT"
@@ -28,7 +29,6 @@ public struct AWSSignatureV4 {
     let accessKey: String
     let secretKey: String
     
-    //used for unit tests
     var unitTestDate: Date?
     
     var amzDate: String {
@@ -38,17 +38,16 @@ public struct AWSSignatureV4 {
         return dateFormatter.string(from: unitTestDate ?? Date())
     }
 
-    //TODO(Brett): public init
-    init(
+    public init(
         service: String,
         host: String,
-        region: String,
+        region: Region,
         accessKey: String,
         secretKey: String
     ) {
         self.service = service
         self.host = host
-        self.region = region
+        self.region = region.rawValue
         self.accessKey = accessKey
         self.secretKey = secretKey
     }
@@ -59,7 +58,12 @@ public struct AWSSignatureV4 {
         scope: String,
         canonicalHash: String
     ) -> String {
-        return "\(algorithm)\n\(date)\n\(scope)\n\(canonicalHash)"
+        return [
+            algorithm,
+            date,
+            scope,
+            canonicalHash
+        ].joined(separator: "\n")
     }
     
     func getSignature(_ stringToSign: String) throws -> String {
@@ -73,28 +77,41 @@ public struct AWSSignatureV4 {
     }
 
     func getCredentialScope() -> String {
-        return "\(dateStamp())/\(self.region)/\(self.service)/aws4_request"
+        return [
+            dateStamp(),
+            region,
+            service,
+            "aws4_request"
+        ].joined(separator: "/")
     }
     
-    func getCanonicalRequest(method: Method, path: String, query: String = "") throws -> String {
+    func getCanonicalRequest(
+        payload: Payload,
+        method: Method,
+        path: String,
+        query: String,
+        headers: [String : String] = [:]
+    ) throws -> String {
         let path = try path.percentEncode(allowing: Byte.awsPathAllowed)
         let query = try query.percentEncode(allowing: Byte.awsQueryAllowed)
-    
-        var request: String = ""
+        let payloadHash = try payload.hashed()
         
-        let headers = "host:\(host)\nx-amz-date:\(amzDate)\n"
-        let signedHeaders = "host;x-amz-date"
-        let payload: Payload = .none
-        var payloadHash: String
-
-        do {
-            payloadHash = try payload.hashed()
-            request = "\(method.rawValue)\n\(path)\n\(query)\n\(headers)\n\(signedHeaders)\n\(payloadHash)"
-        } catch {
-
-        }
-
-        return request
+        var headers = headers
+        generateHeadersToSign(headers: &headers, host: host, hash: payloadHash)
+        
+        let sortedHeaders = alphabetize(headers)
+        let canonicalHeaders = createCanonicalHeaders(sortedHeaders)
+        let headersToSign = sortedHeaders.map { $0.key.lowercased() }.joined(separator: ";")
+        
+        return [
+            method.rawValue,
+            path,
+            query,
+            canonicalHeaders,
+            "",
+            headersToSign,
+            payloadHash
+        ].joined(separator: "\n")
     }
 
     func dateStamp() -> String {
@@ -102,6 +119,53 @@ public struct AWSSignatureV4 {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "YYYYMMdd"
         return dateFormatter.string(from: date)
+    }
+}
+
+extension AWSSignatureV4 {
+    func generateHeadersToSign(
+        headers: inout [String: String],
+        host: String,
+        hash: String
+    ) {
+        headers["host"] = host
+        headers["X-Amz-Date"] = amzDate
+        
+        if hash != "UNSIGNED-PAYLOAD" {
+            headers["x-amz-content-sha256"] = hash
+        }
+    }
+    
+    func alphabetize(_ dict: [String : String]) -> [(key: String, value: String)] {
+        return dict.sorted(by: { $0.0.lowercased() < $1.0.lowercased() })
+    }
+    
+    func createCanonicalHeaders(_ headers: [(key: String, value: String)]) -> String {
+        return headers.map {
+            "\($0.key.lowercased()):\($0.value)"
+        }.joined(separator: "\n")
+    }
+    
+    func signPayload(
+        _ payload: Payload,
+        mime: String?,
+        headers: inout [HeaderKey : String]
+    ) throws {
+        /*let contentLength: Int
+        
+        switch payload {
+        case .bytes(let bytes):
+            contentLength = bytes.count
+        default:
+            contentLength = 0
+        }
+        
+        headers["Content-Length"] = "\(contentLength)"
+        if let mime = mime {
+            headers["Content-Type"] = mime
+        }
+        
+        headers["x-amz-content-sha256"] = try payload.hashed()*/
     }
 }
 
@@ -117,11 +181,12 @@ extension AWSSignatureV4 {
         let credentialScope = getCredentialScope()
         
         let canonicalRequest = try getCanonicalRequest(
+            payload: payload,
             method: method,
             path: path,
             query: query ?? ""
         )
-        
+
         let canonicalHash = try Hash.make(.sha256, canonicalRequest).hexString
         
         let stringToSign = getStringToSign(
@@ -133,17 +198,12 @@ extension AWSSignatureV4 {
         
         let signature = try getSignature(stringToSign)
         
-        let authorizationHeader = "\(algorithm) Credential=\(accessKey)/\(credentialScope), SignedHeaders=host;x-amz-date, Signature=\(signature)"
+        let authorizationHeader = "\(algorithm) Credential=\(accessKey)/\(credentialScope), SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=\(signature)"
         
         return [
             "X-Amz-Date": amzDate,
+            "x-amz-content-sha256": try payload.hashed(),
             "Authorization": authorizationHeader
         ]
-    }
-}
-
-extension Data {
-    func hexEncodedString() -> String {
-        return map { String(format: "%02hhx", $0) }.joined()
     }
 }

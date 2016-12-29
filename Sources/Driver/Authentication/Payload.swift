@@ -17,7 +17,7 @@ extension Payload {
             return "UNSIGNED-PAYLOAD"
             
         case .none:
-            return try Hash.make(.sha256, []).hexString
+            return "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         }
     }
 }
