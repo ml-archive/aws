@@ -1,13 +1,13 @@
 import Core
 
 extension Byte {
-    static let awsQueryAllowed = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~=".bytes
+    public static let awsQueryAllowed = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~=".bytes
     
-    static let awsPathAllowed  = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~/".bytes
+    public static let awsPathAllowed  = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~/".bytes
 }
 
 extension String {
-    func percentEncode(allowing allowed: Bytes) throws -> String {
+    public func percentEncode(allowing allowed: Bytes) throws -> String {
         let bytes = self.bytes
         let encodedBytes = try percentEncodedUppercase(bytes, shouldEncode: {
             return !allowed.contains($0)

@@ -1,6 +1,7 @@
 import XCTest
 import HTTP
 import Transport
+@testable import S3
 @testable import Driver
 
 class AWSTests: XCTestCase {
