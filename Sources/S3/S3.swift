@@ -3,10 +3,12 @@ import HTTP
 import Driver
 import Transport
 
+@_exported import enum Driver.AWSError
+
 public struct S3 {
     public enum Error: Swift.Error {
         case unimplemented
-        case invalidResponse(Status, String?)
+        case invalidResponse(Status)
     }
     
     let signer: AWSSignatureV4
@@ -39,7 +41,11 @@ public struct S3 {
         
         let response = try BasicClient.put(url, headers: headers, body: Body.data(bytes))
         guard response.status == .ok else {
-            throw Error.invalidResponse(response.status, response.body.bytes?.string)
+            guard let bytes = response.body.bytes else {
+                throw Error.invalidResponse(response.status)
+            }
+            
+            throw try ErrorParser.parse(bytes)
         }
     }
 
@@ -49,14 +55,15 @@ public struct S3 {
         
         let response = try BasicClient.get(url, headers: headers)
         guard response.status == .ok else {
-            throw Error.invalidResponse(response.status, response.body.bytes?.string)
+            guard let bytes = response.body.bytes else {
+                throw Error.invalidResponse(response.status)
+            }
+            
+            throw try ErrorParser.parse(bytes)
         }
         
         guard let bytes = response.body.bytes else {
-            throw Error.invalidResponse(
-                .internalServerError,
-                "Response from S3 did not contain a body."
-            )
+            throw Error.invalidResponse(.internalServerError)
         }
         
         return bytes

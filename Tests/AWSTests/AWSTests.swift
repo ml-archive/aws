@@ -1,6 +1,7 @@
 import XCTest
-import HTTP
-import Transport
+
+import Core
+
 @testable import S3
 @testable import Driver
 
