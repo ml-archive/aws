@@ -23,8 +23,12 @@ extension ErrorParser {
 
 extension ErrorParser {
     mutating func extractError() throws -> AWSError {
-        while scanner.peek() != nil {
+        while true {
             skip(until: .lessThan)
+            
+            guard scanner.peek() != nil else {
+                throw Error.couldNotFindErrorTag
+            }
             
             // check for `<Code>`
             guard checkForCodeTag() else {
@@ -39,8 +43,6 @@ extension ErrorParser {
             
             return error
         }
-        
-        throw Error.couldNotFindErrorTag
     }
     
     mutating func checkForCodeTag() -> Bool {
@@ -50,8 +52,8 @@ extension ErrorParser {
             guard
                 let preview = scanner.peek(aheadBy: index),
                 preview == byte
-            else {
-                return false
+                else {
+                    return false
             }
         }
         
