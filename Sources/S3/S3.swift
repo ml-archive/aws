@@ -1,9 +1,9 @@
 import Core
 import HTTP
-import Driver
 import Transport
+import AWSSignatureV4
 
-@_exported import enum Driver.AWSError
+@_exported import enum AWSSignatureV4.AWSError
 
 public struct S3 {
     public enum Error: Swift.Error {

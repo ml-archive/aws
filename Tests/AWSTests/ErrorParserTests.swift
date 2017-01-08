@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import Driver
+@testable import AWSSignatureV4
 
 class ErrorParserTests: XCTestCase {
     static var allTest = [

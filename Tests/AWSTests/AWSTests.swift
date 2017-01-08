@@ -2,9 +2,6 @@ import XCTest
 
 import Core
 
-@testable import S3
-@testable import Driver
-
 class AWSTests: XCTestCase {
     static var allTests = [
         ("testExample", testExample)

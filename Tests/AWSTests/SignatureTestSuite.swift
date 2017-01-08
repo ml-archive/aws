@@ -8,7 +8,7 @@ import XCTest
 import HTTP
 import Foundation
 
-@testable import Driver
+@testable import AWSSignatureV4
 
 class SignatureTestSuite: XCTestCase {
     static var allTests = [
