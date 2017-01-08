@@ -3,5 +3,6 @@ import XCTest
 
 XCTMain([
     testCase(AWSTests.allTests),
-    testCase(SignatureTestSuite.allTests)
+    testCase(SignatureTestSuite.allTests),
+    testCase(ErrorParserTests.allTests),
 ])

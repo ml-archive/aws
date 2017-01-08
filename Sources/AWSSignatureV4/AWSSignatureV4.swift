@@ -86,22 +86,15 @@ public struct AWSSignatureV4 {
     }
     
     func getCanonicalRequest(
-        payload: Payload,
+        payloadHash: String,
         method: Method,
         path: String,
         query: String,
-        headers: [String : String] = [:]
+        canonicalHeaders: String,
+        signedHeaders: String
     ) throws -> String {
         let path = try path.percentEncode(allowing: Byte.awsPathAllowed)
         let query = try query.percentEncode(allowing: Byte.awsQueryAllowed)
-        let payloadHash = try payload.hashed()
-        
-        var headers = headers
-        generateHeadersToSign(headers: &headers, host: host, hash: payloadHash)
-        
-        let sortedHeaders = alphabetize(headers)
-        let canonicalHeaders = createCanonicalHeaders(sortedHeaders)
-        let headersToSign = sortedHeaders.map { $0.key.lowercased() }.joined(separator: ";")
         
         return [
             method.rawValue,
@@ -109,7 +102,7 @@ public struct AWSSignatureV4 {
             query,
             canonicalHeaders,
             "",
-            headersToSign,
+            signedHeaders,
             payloadHash
         ].joined(separator: "\n")
     }
@@ -146,26 +139,13 @@ extension AWSSignatureV4 {
         }.joined(separator: "\n")
     }
     
-    func signPayload(
-        _ payload: Payload,
-        mime: String?,
-        headers: inout [HeaderKey : String]
-    ) throws {
-        /*let contentLength: Int
-        
-        switch payload {
-        case .bytes(let bytes):
-            contentLength = bytes.count
-        default:
-            contentLength = 0
-        }
-        
-        headers["Content-Length"] = "\(contentLength)"
-        if let mime = mime {
-            headers["Content-Type"] = mime
-        }
-        
-        headers["x-amz-content-sha256"] = try payload.hashed()*/
+    func createAuthorizationHeader(
+        algorithm: String,
+        credentialScope: String,
+        signature: String,
+        signedHeaders: String
+    ) -> String {
+        return "\(algorithm) Credential=\(accessKey)/\(credentialScope), SignedHeaders=\(signedHeaders), Signature=\(signature)"
     }
 }
 
@@ -179,12 +159,22 @@ extension AWSSignatureV4 {
     ) throws -> [HeaderKey : String] {
         let algorithm = "AWS4-HMAC-SHA256"
         let credentialScope = getCredentialScope()
+        let payloadHash = try payload.hashed()
+        
+        var headers = headers
+        generateHeadersToSign(headers: &headers, host: host, hash: payloadHash)
+        
+        let sortedHeaders = alphabetize(headers)
+        let signedHeaders = sortedHeaders.map { $0.key.lowercased() }.joined(separator: ";")
+        let canonicalHeaders = createCanonicalHeaders(sortedHeaders)
         
         let canonicalRequest = try getCanonicalRequest(
-            payload: payload,
+            payloadHash: payloadHash,
             method: method,
             path: path,
-            query: query ?? ""
+            query: query ?? "",
+            canonicalHeaders: canonicalHeaders,
+            signedHeaders: signedHeaders
         )
 
         let canonicalHash = try Hash.make(.sha256, canonicalRequest).hexString
@@ -198,11 +188,16 @@ extension AWSSignatureV4 {
         
         let signature = try getSignature(stringToSign)
         
-        let authorizationHeader = "\(algorithm) Credential=\(accessKey)/\(credentialScope), SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=\(signature)"
+        let authorizationHeader = createAuthorizationHeader(
+            algorithm: algorithm,
+            credentialScope: credentialScope,
+            signature: signature,
+            signedHeaders: signedHeaders
+        )
         
         return [
             "X-Amz-Date": amzDate,
-            "x-amz-content-sha256": try payload.hashed(),
+            "x-amz-content-sha256": payloadHash,
             "Authorization": authorizationHeader
         ]
     }

@@ -1,8 +1,8 @@
 import XCTest
 
-import Core
+@testable import AWSSignatureV4
 
-class AWSTests: XCTestCase {
+class ErrorParserTests: XCTestCase {
     static var allTests = [
         ("testExample", testExample)
     ]
