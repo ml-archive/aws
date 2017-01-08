@@ -4,6 +4,7 @@ import Transport
 import AWSSignatureV4
 
 @_exported import enum AWSSignatureV4.AWSError
+@_exported import enum AWSSignatureV4.AccessControlList
 
 public struct S3 {
     public enum Error: Swift.Error {

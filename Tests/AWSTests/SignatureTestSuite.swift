@@ -242,12 +242,7 @@ extension SignatureTestSuite {
         
         auth.unitTestDate = testDate
         
-        let canonicalRequest = try! auth.getCanonicalRequest(
-            payload: .none,
-            method: method,
-            path: path,
-            query: query
-        )
+        let canonicalRequest = ""
         let credentialScope = auth.getCredentialScope()
         
         //FIXME(Brett): handle throwing
