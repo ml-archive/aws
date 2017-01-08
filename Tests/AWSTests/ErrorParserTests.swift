@@ -3,7 +3,7 @@ import XCTest
 @testable import AWSSignatureV4
 
 class ErrorParserTests: XCTestCase {
-    static var allTest = [
+    static var allTests = [
         ("testExample", testExample)
     ]
     
