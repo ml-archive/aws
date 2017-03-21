@@ -1,8 +1,6 @@
 import Core
-import Hash
-import HMAC
+import Crypto
 import HTTP
-import Essentials
 import Foundation
 
 public enum AccessControlList: String {
@@ -67,12 +65,12 @@ public struct AWSSignatureV4 {
     }
     
     func getSignature(_ stringToSign: String) throws -> String {
-        let dateHMAC = try HMAC.make(.sha256, dateStamp().bytes, key: "AWS4\(secretKey)".bytes)
-        let regionHMAC = try HMAC.make(.sha256, region.bytes, key: dateHMAC)
-        let serviceHMAC = try HMAC.make(.sha256, service.bytes, key: regionHMAC)
-        let signingHMAC = try HMAC.make(.sha256, "aws4_request".bytes, key: serviceHMAC)
+        let dateHMAC = try HMAC(.sha256, dateStamp()).authenticate(key: "AWS4\(secretKey)")
+        let regionHMAC = try HMAC(.sha256, region).authenticate(key: dateHMAC)
+        let serviceHMAC = try HMAC(.sha256, service).authenticate(key: regionHMAC)
+        let signingHMAC = try HMAC(.sha256, "aws4_request").authenticate(key: serviceHMAC)
 
-        let signature = try HMAC.make(.sha256, stringToSign.bytes, key: signingHMAC)
+        let signature = try HMAC(.sha256, stringToSign).authenticate(key: signingHMAC)
         return signature.hexString
     }
 

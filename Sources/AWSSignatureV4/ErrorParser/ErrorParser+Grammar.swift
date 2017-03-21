@@ -87,7 +87,7 @@ extension ErrorParser {
     }()
     
     static func insert(into trie: Trie<AWSError>, _ error: AWSError) {
-        trie.insert(error, for: error.rawValue.bytes)
+        trie.insert(error, for: error.rawValue.makeBytes())
     }
 }
 

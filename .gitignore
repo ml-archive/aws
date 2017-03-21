@@ -2,3 +2,4 @@
 .DS_Store
 *.xcodeproj
 Packages/
+Package.pins
