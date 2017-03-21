@@ -55,7 +55,7 @@ extension Droplet {
     /// make sure that VaporS3 has been added properly
     /// before doing
     public func s3() throws -> S3 {
-        guard let s3 = storage[s3StorageKey] as? S3 else { throw VaporS3Error.s3NotFound }
+        guard let s3 = storage[s3StorageKey] as? S3 else { throw VaporS3Error.s3NotConfigured }
         return s3
     }
 }
