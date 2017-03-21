@@ -1,5 +1,7 @@
 import PackageDescription
 
+let alpha = Version(2,0,0, prereleaseIdentifiers: ["alpha"])
+
 let package = Package(
     name: "AWS",
     targets: [
@@ -8,7 +10,6 @@ let package = Package(
         Target(name: "S3", dependencies: ["AWSSignatureV4"]),
     ],
     dependencies: [
-        .Package(url: "https://github.com/vapor/crypto.git", majorVersion: 1),
-        .Package(url: "https://github.com/vapor/engine.git", majorVersion: 1)
+        .Package(url: "https://github.com/vapor/vapor.git", alpha),
     ]
 )

@@ -2,6 +2,7 @@ import Core
 import HTTP
 import Transport
 import AWSSignatureV4
+import Vapor
 
 @_exported import enum AWSSignatureV4.AWSError
 @_exported import enum AWSSignatureV4.AccessControlList
@@ -39,8 +40,8 @@ public struct S3 {
             path: path
             //TODO(Brett): headers & AccessControlList
         )
-        
-        let response = try BasicClient.put(url, headers: headers, body: Body.data(bytes))
+
+        let response = try EngineClient.put(url, headers, Body.data(bytes))
         guard response.status == .ok else {
             guard let bytes = response.body.bytes else {
                 throw Error.invalidResponse(response.status)
@@ -54,7 +55,7 @@ public struct S3 {
         let url = generateURL(for: path)
         let headers = try signer.sign(path: path)
         
-        let response = try BasicClient.get(url, headers: headers)
+        let response = try EngineClient.get(url, headers)
         guard response.status == .ok else {
             guard let bytes = response.body.bytes else {
                 throw Error.invalidResponse(response.status)
