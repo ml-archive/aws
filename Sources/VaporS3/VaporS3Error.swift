@@ -18,4 +18,11 @@ extension VaporS3Error {
             "you're accessing drop.s3() before the provider has been added and booted properly"
         ]
     }
+
+    public var suggestedFixes: [String] {
+        return [
+            "make sure you're adding the s3 provider with `drop.addProvider`",
+            "do not call `drop.s3()` until AFTER the provider has been added"
+        ]
+    }
 }
