@@ -1,7 +1,8 @@
 os:
-      - linux
+    - linux
+    - osx
 language: generic
 sudo: required
 dist: trusty
 script:
-      - eval "$(curl -sL https://swift.vapor.sh/ci)"
+    - eval "$(curl -sL https://swift.vapor.sh/ci-3.1)"
