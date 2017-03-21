@@ -1,12 +1,12 @@
 import Debugging
 
 public enum VaporS3Error: Debuggable {
-    case s3NotFound
+    case s3NotConfigured
 }
 
 extension VaporS3Error {
     public var identifier: String {
-        return "s3NotFound"
+        return "s3NotConfigured"
     }
 
     public var reason: String {
