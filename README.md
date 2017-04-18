@@ -47,7 +47,8 @@ do {
         accessKey: "my-key", 
         secretKey: "my-secret", 
         region: "my-region", 
-        bucket: "my-s3-bucket").uploadFile("/path/to/local/file", "/folder/in/s3/bucket")
+        bucket: "my-s3-bucket"
+    ).uploadFile("/path/to/local/file", "/folder/in/s3/bucket")
 } catch {
 
 }
