@@ -100,4 +100,4 @@ This package has been tested on Mac OS X and Ubuntu 16.04
 Made with ❤️ at [Nodes](http://nodesagency.com).
 
 ## 📄 License
-**AWS** is available under the MIT license. See the [LICENSE](https://github.com/nodes-ios/Serializable/blob/master/LICENSE) file for more info.
+**AWS** is available under the MIT license. See the [LICENSE](https://github.com/nodes-vapor/aws/blob/master/LICENSE) file for more info.
