@@ -27,10 +27,11 @@ If you need other resources you can use Raw call, to call the AWS API directly.
 
 ```swift
 do {
-	let instances = try EC2(
-	    accessKey: "my-key", 
-	    secretKey: "my-secret", 
-	    region: "my-region").describeInstances()
+    let instances = try EC2(
+        accessKey: "my-key", 
+        secretKey: "my-secret", 
+        region: "my-region"
+    ).describeInstances()
 } catch {
 
 }
@@ -60,15 +61,16 @@ If you need a resource not made in one of the functions, you can use the system 
 
 ```swift
 do {
-	return try CallAWS().call(
-		method: "GET", 
-		service: "ec2", 
-		host: "ec2.amazonaws.com", 
-		region: "my-region", 
-		baseURL: "https://ec2.amazonaws.com", 
-		key: "my-key", 
-		secret: "my-secret", 
-		requestParam: "Action=DescribeInstances")
+    return try CallAWS().call(
+        method: "GET", 
+        service: "ec2", 
+        host: "ec2.amazonaws.com", 
+        region: "my-region", 
+        baseURL: "https://ec2.amazonaws.com", 
+        key: "my-key", 
+        secret: "my-secret", 
+        requestParam: "Action=DescribeInstances"
+    )
 } catch {
 
 }
