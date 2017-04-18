@@ -7,6 +7,9 @@
 [![Readme Score](http://readme-score-api.herokuapp.com/score.svg?url=https://github.com/nodes-vapor/aws)](http://clayallsopp.github.io/readme-score?url=https://github.com/nodes-vapor/aws)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/nodes-ios/Serializable/blob/master/LICENSE) 
 
+
+This package makes it easy to use AWS resources from Swift.
+
 ## 📦 Installation
 
 Update your `Package.swift` file.
