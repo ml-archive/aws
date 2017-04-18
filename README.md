@@ -8,10 +8,12 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/nodes-ios/Serializable/blob/master/LICENSE) 
 
 ## 📦 Installation
+
 Update your `Package.swift` file.
 ```swift
 .Package(url: "https://github.com/nodes-vapor/aws.git", majorVersion: 0)
 ```
+
 
 ## Getting started 🚀
 
@@ -76,8 +78,12 @@ do {
 
 }
 ```
+
 ## 🏆 Credits
+
 This package is developed and maintained by the Vapor team at [Nodes](https://www.nodesagency.com).
 
+
 ## 📄 License
+
 This package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
