@@ -26,6 +26,7 @@ public struct AWSSignatureV4 {
     let region: String
     let accessKey: String
     let secretKey: String
+    let contentType = "application/x-www-form-urlencoded; charset=utf-8"
     
     var unitTestDate: Date?
     
@@ -92,7 +93,11 @@ public struct AWSSignatureV4 {
         signedHeaders: String
     ) throws -> String {
         let path = try path.percentEncode(allowing: Byte.awsPathAllowed)
-        let query = try query.percentEncode(allowing: Byte.awsQueryAllowed)
+        // Looks like this _isn't_ required? At least not for = and &, which is
+        // all the AutoScaling.DescribeAutoScalingGroups API needed.
+        // If this breaks for another API call then try to reintroduce
+        // but remove both & and = from Byte.awsQueryAllowed
+        //let query = try query.urlEncode(allowing: Byte.awsQueryAllowed)
         
         return [
             method.rawValue,
@@ -121,10 +126,12 @@ extension AWSSignatureV4 {
     ) {
         headers["host"] = host
         headers["X-Amz-Date"] = amzDate
-        
-        if hash != "UNSIGNED-PAYLOAD" {
+        headers["Content-Type"] = contentType
+
+        /* This didn't appear to be necessary either. Keeping for a release in case in helps someone
+         if hash != "UNSIGNED-PAYLOAD" {
             headers["x-amz-content-sha256"] = hash
-        }
+        }*/
     }
     
     func alphabetize(_ dict: [String : String]) -> [(key: String, value: String)] {
@@ -164,8 +171,11 @@ extension AWSSignatureV4 {
         
         let sortedHeaders = alphabetize(headers)
         let signedHeaders = sortedHeaders.map { $0.key.lowercased() }.joined(separator: ";")
+        //print("Signed Headers:\n\(signedHeaders)\n***\n")
         let canonicalHeaders = createCanonicalHeaders(sortedHeaders)
-        
+        //print("Canonical Headers:\n\(canonicalHeaders)\n***\n")
+
+        // Task 1 is the Canonical Request
         let canonicalRequest = try getCanonicalRequest(
             payloadHash: payloadHash,
             method: method,
@@ -174,18 +184,26 @@ extension AWSSignatureV4 {
             canonicalHeaders: canonicalHeaders,
             signedHeaders: signedHeaders
         )
+        //print("Canonical Request:\n\(canonicalRequest)\n***\n")
 
         let canonicalHash = try Hash.make(.sha256, canonicalRequest).hexString
-        
+        //print("Canonical hash: \(canonicalHash)")
+
+        // Task 2 is the String to Sign
         let stringToSign = getStringToSign(
             algorithm: algorithm,
             date: amzDate,
             scope: credentialScope,
             canonicalHash: canonicalHash
         )
-        
+        //print("String to sign:\n\(stringToSign)\n***\n")
+
+        // Task 3 calculates Signature
         let signature = try getSignature(stringToSign)
-        
+        //print("Signature:\n\(signature)\n***\n")
+
+
+        //Task 4 Add signing information to the request
         let authorizationHeader = createAuthorizationHeader(
             algorithm: algorithm,
             credentialScope: credentialScope,
@@ -196,8 +214,9 @@ extension AWSSignatureV4 {
       
         var requestHeaders: [HeaderKey: String] = [
             "X-Amz-Date": amzDate,
-            "x-amz-content-sha256": payloadHash,
-            "Authorization": authorizationHeader
+            "Content-Type": contentType,
+            "Authorization": authorizationHeader,
+            "Host": self.host
         ]
       
         headers.forEach { key, value in
