@@ -2,6 +2,7 @@ import Core
 import Crypto
 import HTTP
 import Foundation
+import Node
 
 public enum AccessControlList: String {
     case privateAccess = "private"
@@ -113,6 +114,7 @@ public struct AWSSignatureV4 {
     func dateStamp() -> String {
         let date = unitTestDate ?? Date()
         let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         dateFormatter.dateFormat = "YYYYMMdd"
         return dateFormatter.string(from: date)
     }
@@ -210,8 +212,7 @@ extension AWSSignatureV4 {
             signature: signature,
             signedHeaders: signedHeaders
         )
-      
-      
+
         var requestHeaders: [HeaderKey: String] = [
             "X-Amz-Date": amzDate,
             "Content-Type": contentType,
