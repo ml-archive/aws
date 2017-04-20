@@ -5,9 +5,26 @@ import Transport
 import AWSSignatureV4
 import TLS
 import Node
+import SWXMLHash
 
 @_exported import enum AWSSignatureV4.AWSError
 @_exported import enum AWSSignatureV4.AccessControlList
+
+public enum LifeCycleState {
+    case InService
+}
+
+public enum HealthStatus {
+    case Healthy
+}
+
+public struct Instance {
+    public let state: LifeCycleState
+    public let instanceID: String
+    public let status: HealthStatus
+    public let protectedFromScaleIn: Bool
+    public let availabilityZone: String
+}
 
 public struct AutoScaling {
     public enum Error: Swift.Error {
@@ -47,14 +64,13 @@ public struct AutoScaling {
     /*
      * http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_DescribeAutoScalingGroups.html
      */
-    public func describeAutoScalingGroups(name: String) throws -> String {
+    public func describeAutoScalingGroups(name: String) throws -> [Instance] {
         let url = generateURL(for: "DescribeAutoScalingGroups", name: name)
         /*let query: [HeaderKey: String] = ["Action": "DescribeAutoScalingGroups",
                                                   "AutoScalingGroupNames.member.1": name,
                                                   "Version": "2011-01-01"]*/
 
         let headers = try signer.sign(path: "/", query: "Action=DescribeAutoScalingGroups&AutoScalingGroupNames.member.1=\(name)&Version=2011-01-01")
-        print(headers)
 
         let client = try EngineClientFactory.init().makeClient(hostname: host, port: 443, .tls(Context.init(.client)))
         //let attempt = EngineClient.init(hostname: host, port: 443, .none)
@@ -75,6 +91,16 @@ public struct AutoScaling {
             throw Error.invalidResponse(.internalServerError)
         }
 
-        return try bytes.string()
+        let output = try bytes.string()
+        let xml = SWXMLHash.parse(output)
+        let autoscalingGroupXML = xml["DescribeAutoScalingGroupsResponse"]["DescribeAutoScalingGroupsResult"]["AutoScalingGroups"]["member"]
+
+        var autoscalingGroup = [Instance]()
+        for member in autoscalingGroupXML["Instances"].children {
+            if let instanceId = member["InstanceId"].element?.text, let availabilityZone = member["AvailabilityZone"].element?.text {
+                autoscalingGroup.append(Instance(state: .InService, instanceID: instanceId, status: .Healthy, protectedFromScaleIn: false, availabilityZone: availabilityZone))
+            }
+        }
+        return autoscalingGroup
     }
 }
