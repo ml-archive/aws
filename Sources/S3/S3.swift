@@ -41,7 +41,7 @@ public struct S3 {
             //TODO(Brett): headers & AccessControlList
         )
 
-        let response = try EngineClient.put(url, headers, Body.data(bytes))
+        let response = try EngineClient.factory.put(url, headers, Body.data(bytes))
         guard response.status == .ok else {
             guard let bytes = response.body.bytes else {
                 throw Error.invalidResponse(response.status)
@@ -55,7 +55,7 @@ public struct S3 {
         let url = generateURL(for: path)
         let headers = try signer.sign(path: path)
         
-        let response = try EngineClient.get(url, headers)
+        let response = try EngineClient.factory.get(url, headers)
         guard response.status == .ok else {
             guard let bytes = response.body.bytes else {
                 throw Error.invalidResponse(response.status)

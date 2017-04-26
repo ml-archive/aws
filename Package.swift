@@ -1,7 +1,5 @@
 import PackageDescription
 
-let alpha = Version(2,0,0, prereleaseIdentifiers: ["alpha"])
-
 let package = Package(
     name: "AWS",
     targets: [
@@ -11,6 +9,6 @@ let package = Package(
         Target(name: "VaporS3", dependencies: ["S3"]),
     ],
     dependencies: [
-        .Package(url: "https://github.com/vapor/vapor.git", alpha),
+        .Package(url: "https://github.com/vapor/vapor.git", Version(2,0,0, prereleaseIdentifiers: ["beta"])),
     ]
 )
