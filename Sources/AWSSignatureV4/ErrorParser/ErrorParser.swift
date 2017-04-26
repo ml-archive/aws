@@ -38,7 +38,7 @@ extension ErrorParser {
             let errorBytes = consume(until: .lessThan)
             
             guard let error = ErrorParser.awsGrammar.contains(errorBytes) else {
-                throw Error.unknownError(errorBytes.string)
+                throw Error.unknownError(errorBytes.makeString())
             }
             
             return error

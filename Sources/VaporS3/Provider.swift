@@ -6,7 +6,7 @@ private let s3StorageKey = "s3-provider:s3"
 
 public final class Provider: Vapor.Provider {
     let s3: S3
-
+    public static var repositoryName: String = "VaporS3"
     /// Initialize the provider with an s3 instance
     public init(_ s3: S3) {
         self.s3 = s3
@@ -45,7 +45,9 @@ public final class Provider: Vapor.Provider {
         drop.storage[s3StorageKey] = s3
     }
 
-    public func beforeRun(_ drop: Droplet) throws {}
+    public func boot(_ config: Config) throws {}
+
+    public func beforeRun(_ droplet: Droplet) throws {}
 }
 
 extension Droplet {
