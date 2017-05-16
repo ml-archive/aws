@@ -192,11 +192,19 @@ extension AWSSignatureV4 {
             signature: signature,
             signedHeaders: signedHeaders
         )
-        
-        return [
+      
+      
+        var requestHeaders: [HeaderKey: String] = [
             "X-Amz-Date": amzDate,
             "x-amz-content-sha256": payloadHash,
             "Authorization": authorizationHeader
         ]
+      
+        headers.forEach { key, value in
+            let headerKey = HeaderKey(stringLiteral: key)
+            requestHeaders[headerKey] = value
+        }
+      
+        return requestHeaders
     }
 }
