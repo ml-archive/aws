@@ -129,10 +129,9 @@ extension AWSSignatureV4 {
         headers["X-Amz-Date"] = amzDate
         headers["Content-Type"] = contentType
 
-        /* This didn't appear to be necessary either. Keeping for a release in case in helps someone
          if hash != "UNSIGNED-PAYLOAD" {
             headers["x-amz-content-sha256"] = hash
-        }*/
+        }
     }
     
     func alphabetize(_ dict: [String : String]) -> [(key: String, value: String)] {

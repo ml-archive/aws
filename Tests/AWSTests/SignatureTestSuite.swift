@@ -32,13 +32,13 @@ class SignatureTestSuite: XCTestCase {
     }()
     
     func testGetUnreserved() {
-        let expectedCanonicalRequest = "GET\n/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\n\nhost:example.amazonaws.com\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20150830T123600Z\n\nhost;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        let expectedCanonicalRequest = "GET\n/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\n\ncontent-type;host:example.amazonaws.com\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20150830T123600Z\n\nhost;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         
         let expectedCredentialScope = "20150830/us-east-1/service/aws4_request"
         
         let expectedCanonicalHeaders: [HeaderKey : String] = [
             "X-Amz-Date": "20150830T123600Z",
-            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=feae8f2b49f6807d4ca43941e2d6c7aacaca499df09935d14e97eed7647da5dc"
+            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=6d6a914856348fd39392690d1eca166d4dc74792a67db4290568c57d535ca985"
         ]
         
         let result = sign(
@@ -59,7 +59,7 @@ class SignatureTestSuite: XCTestCase {
         
         let expectedCanonicalHeaders: [HeaderKey : String] = [
             "X-Amz-Date": "20150830T123600Z",
-            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=29d69532444b4f32a4c1b19af2afc116589685058ece54d8e43f0be05aeff6c0"
+            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=29d69532444b4f32a4c1b19af2afc116589685058ece54d8e43f0be05aeff6c0"
         ]
         
         let result = sign(method: .get, path: "/ሴ")
