@@ -72,10 +72,10 @@ public struct AutoScaling {
 
         let headers = try signer.sign(path: "/", query: "Action=DescribeAutoScalingGroups&AutoScalingGroupNames.member.1=\(name)&Version=2011-01-01")
 
-        let client = try EngineClientFactory.init().makeClient(hostname: host, port: 443, .tls(Context.init(.client)))
-        //let attempt = EngineClient.init(hostname: host, port: 443, .none)
+        let client = try EngineClientFactory.init().makeClient(hostname: host, port: 443, securityLayer: .tls(Context.init(.client)), proxy: nil)
+
         let version = HTTP.Version(major: 1, minor: 1)
-        let request = try HTTP.Request(method: Method.get, uri: url, version: version, headers: headers, body: Body.data(Bytes([])))
+        let request = HTTP.Request(method: Method.get, uri: url, version: version, headers: headers, body: Body.data(Bytes([])))
         let response = try client.respond(to: request)
         //let response = try client.get(url, query: query)
         guard response.status == .ok else {
@@ -91,7 +91,7 @@ public struct AutoScaling {
             throw Error.invalidResponse(.internalServerError)
         }
 
-        let output = try bytes.string()
+        let output = bytes.makeString()
         let xml = SWXMLHash.parse(output)
         let autoscalingGroupXML = xml["DescribeAutoScalingGroupsResponse"]["DescribeAutoScalingGroupsResult"]["AutoScalingGroups"]["member"]
 

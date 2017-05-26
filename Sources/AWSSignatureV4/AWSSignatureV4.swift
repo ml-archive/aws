@@ -2,7 +2,6 @@ import Core
 import Crypto
 import HTTP
 import Foundation
-import Node
 
 public enum AccessControlList: String {
     case privateAccess = "private"
@@ -173,9 +172,7 @@ extension AWSSignatureV4 {
         
         let sortedHeaders = alphabetize(headers)
         let signedHeaders = sortedHeaders.map { $0.key.lowercased() }.joined(separator: ";")
-        //print("Signed Headers:\n\(signedHeaders)\n***\n")
         let canonicalHeaders = createCanonicalHeaders(sortedHeaders)
-        //print("Canonical Headers:\n\(canonicalHeaders)\n***\n")
 
         // Task 1 is the Canonical Request
         let canonicalRequest = try getCanonicalRequest(
@@ -186,10 +183,8 @@ extension AWSSignatureV4 {
             canonicalHeaders: canonicalHeaders,
             signedHeaders: signedHeaders
         )
-        //print("Canonical Request:\n\(canonicalRequest)\n***\n")
 
         let canonicalHash = try Hash.make(.sha256, canonicalRequest).hexString
-        //print("Canonical hash: \(canonicalHash)")
 
         // Task 2 is the String to Sign
         let stringToSign = getStringToSign(
@@ -198,12 +193,9 @@ extension AWSSignatureV4 {
             scope: credentialScope,
             canonicalHash: canonicalHash
         )
-        //print("String to sign:\n\(stringToSign)\n***\n")
 
         // Task 3 calculates Signature
         let signature = try getSignature(stringToSign)
-        //print("Signature:\n\(signature)\n***\n")
-
 
         //Task 4 Add signing information to the request
         let authorizationHeader = createAuthorizationHeader(

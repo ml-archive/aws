@@ -52,7 +52,7 @@ public struct S3 {
     }
 
     public func get(path: String) throws -> Bytes {
-        /*let url = generateURL(for: path)
+        let url = generateURL(for: path)
         let headers = try signer.sign(path: path)
         
         let response = try EngineClient.factory.get(url, headers)
@@ -69,8 +69,6 @@ public struct S3 {
         }
         
         return bytes
-        */
-        return Bytes()
     }
 
     public func delete(file: String) throws {
