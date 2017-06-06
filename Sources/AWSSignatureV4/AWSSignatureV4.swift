@@ -28,7 +28,8 @@ public struct AWSSignatureV4 {
     let secretKey: String
     let contentType = "application/x-www-form-urlencoded; charset=utf-8"
     
-    var unitTestDate: Date?
+    private var unitTestDate: Date?
+    fileprivate var canonicalRequest: String?
     
     var amzDate: String {
         let dateFormatter = DateFormatter()
@@ -125,12 +126,11 @@ extension AWSSignatureV4 {
         host: String,
         hash: String
     ) {
-        headers["host"] = host
+        headers["Host"] = host
         headers["X-Amz-Date"] = amzDate
-        headers["Content-Type"] = contentType
 
          if hash != "UNSIGNED-PAYLOAD" {
-            headers["x-amz-content-sha256"] = hash
+            //headers["x-amz-content-sha256"] = hash
         }
     }
     
@@ -174,7 +174,8 @@ extension AWSSignatureV4 {
         let canonicalHeaders = createCanonicalHeaders(sortedHeaders)
 
         // Task 1 is the Canonical Request
-        let canonicalRequest = try getCanonicalRequest(
+        //TODO(jmsmith): How do I make this available for testing?!
+        canonicalRequest = try getCanonicalRequest(
             payloadHash: payloadHash,
             method: method,
             path: path,
