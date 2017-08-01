@@ -38,7 +38,7 @@ public struct S3 {
             payload: .bytes(bytes),
             method: .put,
             path: path
-            //TODO(Brett): headers & AccessControlList
+            headers: ["x-amz-acl": access.rawValue]
         )
 
         let response = try EngineClient.factory.put(url, headers, Body.data(bytes))
