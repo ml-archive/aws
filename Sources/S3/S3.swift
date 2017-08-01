@@ -37,7 +37,7 @@ public struct S3 {
         let headers = try signer.sign(
             payload: .bytes(bytes),
             method: .put,
-            path: path
+            path: path,
             headers: ["x-amz-acl": access.rawValue]
         )
 
