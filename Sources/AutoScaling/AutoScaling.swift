@@ -66,9 +66,6 @@ public struct AutoScaling {
      */
     public func describeAutoScalingGroups(name: String) throws -> [Instance] {
         let url = generateURL(for: "DescribeAutoScalingGroups", name: name)
-        /*let query: [HeaderKey: String] = ["Action": "DescribeAutoScalingGroups",
-                                                  "AutoScalingGroupNames.member.1": name,
-                                                  "Version": "2011-01-01"]*/
 
         let headers = try signer.sign(path: "/", query: "Action=DescribeAutoScalingGroups&AutoScalingGroupNames.member.1=\(name)&Version=2011-01-01")
 
@@ -77,7 +74,7 @@ public struct AutoScaling {
         let version = HTTP.Version(major: 1, minor: 1)
         let request = HTTP.Request(method: Method.get, uri: url, version: version, headers: headers, body: Body.data(Bytes([])))
         let response = try client.respond(to: request)
-        //let response = try client.get(url, query: query)
+
         guard response.status == .ok else {
             print("Response error: \(response)")
             guard let bytes = response.body.bytes else {
