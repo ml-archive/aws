@@ -93,11 +93,7 @@ public struct AWSSignatureV4 {
         signedHeaders: String
     ) throws -> String {
         let path = try path.percentEncode(allowing: Byte.awsPathAllowed)
-        // Looks like this _isn't_ required? At least not for = and &, which is
-        // all the AutoScaling.DescribeAutoScalingGroups API needed.
-        // If this breaks for another API call then try to reintroduce
-        // but remove both & and = from Byte.awsQueryAllowed
-        //let query = try query.urlEncode(allowing: Byte.awsQueryAllowed)
+        let query = try query.percentEncode(allowing: Byte.awsQueryAllowed)
 
         return [
             method.rawValue,
