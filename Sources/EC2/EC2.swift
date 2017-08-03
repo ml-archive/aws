@@ -1,6 +1,6 @@
 import Foundation
 
-public class EC2 {
+class EC2 {
     let accessKey: String
     let secretKey: String
     let region: String

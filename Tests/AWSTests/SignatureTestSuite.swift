@@ -1,6 +1,8 @@
 /**
     All tests are based off of Amazon's Signature Test Suite
     See: http://docs.aws.amazon.com/general/latest/gr/signature-v4-test-suite.html
+
+    They also include the [`x-amz-content-sha256` header](http://docs.aws.amazon.com/AmazonS3/latest/API/bucket-policy-s3-sigv4-conditions.html).
  */
 
 import XCTest
@@ -13,7 +15,7 @@ import Foundation
 class SignatureTestSuite: XCTestCase {
     static var allTests = [
         ("testGetUnreserved", testGetUnreserved),
-        /*("testGetUTF8", testGetUTF8),
+        ("testGetUTF8", testGetUTF8),
         ("testGetVanilla", testGetVanilla),
         ("testGetVanillaQuery", testGetVanillaQuery),
         ("testGetVanillaEmptyQueryKey", testGetVanillaEmptyQueryKey),
@@ -21,7 +23,7 @@ class SignatureTestSuite: XCTestCase {
         ("testGetVanillaQueryUTF8", testGetVanillaQueryUTF8),
         ("testPostVanilla", testPostVanilla),
         ("testPostVanillaQuery", testPostVanillaQuery),
-        ("testPostVanillaQueryNonunreserved", testPostVanillaQueryNonunreserved)*/
+        ("testPostVanillaQueryNonunreserved", testPostVanillaQueryNonunreserved)
     ]
     
     static let dateFormatter: DateFormatter  = {
@@ -32,13 +34,13 @@ class SignatureTestSuite: XCTestCase {
     }()
     
     func testGetUnreserved() {
-        let expectedCanonicalRequest = "GET\n/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\n\ncontent-type;host:example.amazonaws.com\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20150830T123600Z\n\nhost;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        let expectedCanonicalRequest = "GET\n/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\n\nhost:example.amazonaws.com\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20150830T123600Z\n\nhost;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         
         let expectedCredentialScope = "20150830/us-east-1/service/aws4_request"
         
         let expectedCanonicalHeaders: [HeaderKey : String] = [
             "X-Amz-Date": "20150830T123600Z",
-            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=07ef7494c76fa4850883e2b006601f940f8a34d404d0cfa977f52a65bbf5f24f"
+            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=feae8f2b49f6807d4ca43941e2d6c7aacaca499df09935d14e97eed7647da5dc"
         ]
         
         let result = sign(
@@ -51,7 +53,7 @@ class SignatureTestSuite: XCTestCase {
             canonicalHeaders: expectedCanonicalHeaders
         )
     }
-    /*
+
     func testGetUTF8() {
         let expectedCanonicalRequest = "GET\n/%E1%88%B4\n\nhost:example.amazonaws.com\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20150830T123600Z\n\nhost;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         
@@ -59,7 +61,7 @@ class SignatureTestSuite: XCTestCase {
         
         let expectedCanonicalHeaders: [HeaderKey : String] = [
             "X-Amz-Date": "20150830T123600Z",
-            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=29d69532444b4f32a4c1b19af2afc116589685058ece54d8e43f0be05aeff6c0"
+            "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=29d69532444b4f32a4c1b19af2afc116589685058ece54d8e43f0be05aeff6c0"
         ]
         
         let result = sign(method: .get, path: "/ሴ")
@@ -219,30 +221,57 @@ class SignatureTestSuite: XCTestCase {
             canonicalHeaders: expectedCanonicalHeaders
         )
 
-    }*/
+    }
 }
 
 extension SignatureTestSuite {
     var testDate: Date {
         return SignatureTestSuite.dateFormatter.date(from: "20150830T123600Z")!
     }
-    
+
+
+    /**
+     Preparation of data to sign a canonical request.
+
+     Intended to handle the preparation in the AWSSignatureV4's `sign` function
+
+     - returns:
+     Hash value and multiple versions of headers
+
+     - parameters:
+        - auth: Signature struct to use for calculations
+        - host: Hostname to sign for
+     */
+    func prepCanonicalRequest(auth: AWSSignatureV4, host: String) -> (String, String, String) {
+        let payloadHash = try! Payload.none.hashed()
+        var headers = [String:String]()
+        auth.generateHeadersToSign(headers: &headers, host: host, hash: payloadHash)
+
+        let sortedHeaders = auth.alphabetize(headers)
+        let signedHeaders = sortedHeaders.map { $0.key.lowercased() }.joined(separator: ";")
+        let canonicalHeaders = auth.createCanonicalHeaders(sortedHeaders)
+        return (payloadHash, signedHeaders, canonicalHeaders)
+    }
+
     func sign(
         method: AWSSignatureV4.Method,
         path: String,
         query: String = ""
     ) -> SignerResult {
+        let host = "example.amazonaws.com"
         var auth = AWSSignatureV4(
             service: "service",
-            host: "example.amazonaws.com",
+            host: host,
             region: .usEast1,
             accessKey: "AKIDEXAMPLE",
             secretKey: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
         )
         
         auth.unitTestDate = testDate
+        let (payloadHash, signedHeaders, preppedCanonicalHeaders) = prepCanonicalRequest(auth: auth, host: host)
+        let canonicalRequest = try! auth.getCanonicalRequest(payloadHash: payloadHash, method: method, path: path, query: query, canonicalHeaders: preppedCanonicalHeaders, signedHeaders: signedHeaders)
+
         
-        let canonicalRequest = auth.testCano
         let credentialScope = auth.getCredentialScope()
         
         //FIXME(Brett): handle throwing

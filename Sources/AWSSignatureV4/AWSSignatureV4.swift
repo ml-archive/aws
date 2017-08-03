@@ -28,9 +28,8 @@ public struct AWSSignatureV4 {
     let secretKey: String
     let contentType = "application/x-www-form-urlencoded; charset=utf-8"
     
-    private var unitTestDate: Date?
-    fileprivate var canonicalRequest: String?
-    
+    internal var unitTestDate: Date?
+
     var amzDate: String {
         let dateFormatter = DateFormatter()
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
@@ -130,7 +129,7 @@ extension AWSSignatureV4 {
         headers["X-Amz-Date"] = amzDate
 
          if hash != "UNSIGNED-PAYLOAD" {
-            //headers["x-amz-content-sha256"] = hash
+            headers["x-amz-content-sha256"] = hash
         }
     }
     
@@ -155,6 +154,19 @@ extension AWSSignatureV4 {
 }
 
 extension AWSSignatureV4 {
+    /**
+    Sign a request to be sent to an AWS API.
+
+    - returns:
+    A dictionary with headers to attach to a request
+
+    - parameters:
+        - payload: A hash of this data will be included in the headers
+        - method: Type of HTTP request
+        - path: API call being referenced
+        - query: Additional querystring in key-value format ("?key=value&key2=value2")
+        - headers: HTTP headers added to the request
+    */
     public func sign(
         payload: Payload = .none,
         method: Method = .get,
@@ -167,6 +179,7 @@ extension AWSSignatureV4 {
         let payloadHash = try payload.hashed()
         
         var headers = headers
+
         generateHeadersToSign(headers: &headers, host: host, hash: payloadHash)
         
         let sortedHeaders = alphabetize(headers)
@@ -174,8 +187,7 @@ extension AWSSignatureV4 {
         let canonicalHeaders = createCanonicalHeaders(sortedHeaders)
 
         // Task 1 is the Canonical Request
-        //TODO(jmsmith): How do I make this available for testing?!
-        canonicalRequest = try getCanonicalRequest(
+        let canonicalRequest = try getCanonicalRequest(
             payloadHash: payloadHash,
             method: method,
             path: path,
@@ -208,6 +220,7 @@ extension AWSSignatureV4 {
         var requestHeaders: [HeaderKey: String] = [
             "X-Amz-Date": amzDate,
             "Content-Type": contentType,
+            "x-amz-content-sha256": payloadHash,
             "Authorization": authorizationHeader,
             "Host": self.host
         ]
