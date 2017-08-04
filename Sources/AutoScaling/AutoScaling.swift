@@ -57,22 +57,22 @@ public struct AutoScaling {
         )
     }
 
-    func generateURL(for action: String, name: String) -> String {
-        return "\(baseURL)/?Action=\(action)&AutoScalingGroupNames.member.1=\(name)&Version=2011-01-01"
+    func generateQuery(for action: String, name: String) -> String {
+        return "Action=\(action)&AutoScalingGroupNames.member.1=\(name)&Version=2011-01-01"
     }
 
     /*
      * http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_DescribeAutoScalingGroups.html
      */
     public func describeAutoScalingGroups(name: String) throws -> [Instance] {
-        let url = generateURL(for: "DescribeAutoScalingGroups", name: name)
+        let query = generateQuery(for: "DescribeAutoScalingGroups", name: name)
 
-        let headers = try signer.sign(path: "/", query: "Action=DescribeAutoScalingGroups&AutoScalingGroupNames.member.1=\(name)&Version=2011-01-01")
+        let headers = try signer.sign(path: "/", query: query)
 
         let client = try EngineClientFactory.init().makeClient(hostname: host, port: 443, securityLayer: .tls(Context.init(.client)), proxy: nil)
 
         let version = HTTP.Version(major: 1, minor: 1)
-        let request = HTTP.Request(method: Method.get, uri: url, version: version, headers: headers, body: Body.data(Bytes([])))
+        let request = HTTP.Request(method: Method.get, uri: "\(baseURL)/?\(query)", version: version, headers: headers, body: Body.data(Bytes([])))
         let response = try client.respond(to: request)
 
         guard response.status == .ok else {
