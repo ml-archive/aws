@@ -16,11 +16,17 @@ extension SignerResult {
         file: StaticString = #file,
         line: UInt = #line
     ) {
-        //XCTAssertEqual(self.canonicalRequest, canonicalRequest, file: file, line: line)
+        XCTAssertEqual(self.canonicalRequest, canonicalRequest, file: file, line: line)
         XCTAssertEqual(self.credentialScope, credentialScope, file: file, line: line)
 
         canonicalHeaders.forEach {
-            XCTAssertEqual(self.canonicalHeaders[$0.key], $0.value, file: file, line: line)
+            if $0.key == "Authorization" {
+                for (givenLine, expectedLine) in zip(self.canonicalHeaders[$0.key]!.components(separatedBy: " "), $0.value.components(separatedBy: " ")) {
+                    XCTAssertEqual(givenLine, expectedLine)
+                }
+            } else {
+                XCTAssertEqual(self.canonicalHeaders[$0.key], $0.value, file: file, line: line)
+            }
         }
     }
 }

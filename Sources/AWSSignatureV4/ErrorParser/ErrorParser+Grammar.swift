@@ -3,7 +3,7 @@ import Core
 extension ErrorParser {
     static let awsGrammar: Trie<AWSError> = {
         let trie = Trie<AWSError>()
-        
+
         insert(into: trie, .accessDenied)
         insert(into: trie, .accountProblem)
         insert(into: trie, .ambiguousGrantByEmailAddress)
@@ -82,10 +82,10 @@ extension ErrorParser {
         insert(into: trie, .unexpectedContent)
         insert(into: trie, .unresolvableGrantByEmailAddress)
         insert(into: trie, .userKeyMustBeSpecified)
-        
+
         return trie
     }()
-    
+
     static func insert(into trie: Trie<AWSError>, _ error: AWSError) {
         trie.insert(error, for: error.rawValue.makeBytes())
     }

@@ -12,10 +12,10 @@ public struct S3 {
         case unimplemented
         case invalidResponse(Status)
     }
-    
+
     let signer: AWSSignatureV4
     public var host: String
-    
+
     public init(
         host: String,
         accessKey: String,
@@ -46,7 +46,7 @@ public struct S3 {
             guard let bytes = response.body.bytes else {
                 throw Error.invalidResponse(response.status)
             }
-            
+
             throw try ErrorParser.parse(bytes)
         }
     }
@@ -54,20 +54,20 @@ public struct S3 {
     public func get(path: String) throws -> Bytes {
         let url = generateURL(for: path)
         let headers = try signer.sign(path: path)
-        
+
         let response = try EngineClient.factory.get(url, headers)
         guard response.status == .ok else {
             guard let bytes = response.body.bytes else {
                 throw Error.invalidResponse(response.status)
             }
-            
+
             throw try ErrorParser.parse(bytes)
         }
-        
+
         guard let bytes = response.body.bytes else {
             throw Error.invalidResponse(.internalServerError)
         }
-        
+
         return bytes
     }
 
@@ -89,7 +89,7 @@ extension Dictionary where Key: CustomStringConvertible, Value: CustomStringConv
         self.forEach {
             result.updateValue($0.value.description, forKey: HeaderKey($0.key.description))
         }
-        
+
         return result
     }
 }

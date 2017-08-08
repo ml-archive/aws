@@ -11,7 +11,7 @@ public enum Region: String {
     case apNortheast1 = "ap-northeast-1"
     case apNortheast2 = "ap-northeast-2"
     case saEast1 = "sa-east-1"
-    
+
     public var host: String {
         switch self {
         case .usEast1: return "s3.amazonaws.com"

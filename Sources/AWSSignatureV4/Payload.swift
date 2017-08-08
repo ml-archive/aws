@@ -12,10 +12,10 @@ extension Payload {
         switch self {
         case .bytes(let bytes):
             return try Hash.make(.sha256, bytes).hexString
-            
+
         case .unsigned:
             return "UNSIGNED-PAYLOAD"
-            
+
         case .none:
             return "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         }
@@ -27,7 +27,7 @@ extension Payload {
         switch self {
         case .bytes(let bytes):
             return bytes
-            
+
         default:
             return []
         }
@@ -39,7 +39,7 @@ extension Payload: Equatable {
         switch (lhs, rhs) {
         case (.bytes, .bytes), (.unsigned, .unsigned), (.none, .none):
             return true
-            
+
         default:
             return false
         }

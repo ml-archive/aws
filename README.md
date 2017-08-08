@@ -83,6 +83,13 @@ do {
 }
 ```
 
+## 📃 Development
+
+If you want to improve this, you'll need to make sure you're making a copy of OpenSSL available to `swift build` and the toolchain. If you use Xcode, something like the following after `brew install openssl` will work:
+
+```
+swift package -Xswiftc -I/usr/local/Cellar/openssl/1.0.2j/include -Xlinker -L/usr/local/Cellar/openssl/1.0.2j/lib/ generate-xcodeproj
+```
 
 ## 🏆 Credits
 

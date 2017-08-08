@@ -20,15 +20,16 @@ public struct AWSSignatureV4 {
         case post = "POST"
         case put = "PUT"
     }
-    
+
     let service: String
     let host: String
     let region: String
     let accessKey: String
     let secretKey: String
-    
-    var unitTestDate: Date?
-    
+    let contentType = "application/x-www-form-urlencoded; charset=utf-8"
+
+    internal var unitTestDate: Date?
+
     var amzDate: String {
         let dateFormatter = DateFormatter()
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
@@ -63,7 +64,7 @@ public struct AWSSignatureV4 {
             canonicalHash
         ].joined(separator: "\n")
     }
-    
+
     func getSignature(_ stringToSign: String) throws -> String {
         let dateHMAC = try HMAC(.sha256, dateStamp()).authenticate(key: "AWS4\(secretKey)")
         let regionHMAC = try HMAC(.sha256, region).authenticate(key: dateHMAC)
@@ -82,7 +83,7 @@ public struct AWSSignatureV4 {
             "aws4_request"
         ].joined(separator: "/")
     }
-    
+
     func getCanonicalRequest(
         payloadHash: String,
         method: Method,
@@ -93,7 +94,7 @@ public struct AWSSignatureV4 {
     ) throws -> String {
         let path = try path.percentEncode(allowing: Byte.awsPathAllowed)
         let query = try query.percentEncode(allowing: Byte.awsQueryAllowed)
-        
+
         return [
             method.rawValue,
             path,
@@ -108,6 +109,7 @@ public struct AWSSignatureV4 {
     func dateStamp() -> String {
         let date = unitTestDate ?? Date()
         let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         dateFormatter.dateFormat = "YYYYMMdd"
         return dateFormatter.string(from: date)
     }
@@ -119,24 +121,24 @@ extension AWSSignatureV4 {
         host: String,
         hash: String
     ) {
-        headers["host"] = host
+        headers["Host"] = host
         headers["X-Amz-Date"] = amzDate
-        
-        if hash != "UNSIGNED-PAYLOAD" {
+
+         if hash != "UNSIGNED-PAYLOAD" {
             headers["x-amz-content-sha256"] = hash
         }
     }
-    
+
     func alphabetize(_ dict: [String : String]) -> [(key: String, value: String)] {
         return dict.sorted(by: { $0.0.lowercased() < $1.0.lowercased() })
     }
-    
+
     func createCanonicalHeaders(_ headers: [(key: String, value: String)]) -> String {
         return headers.map {
             "\($0.key.lowercased()):\($0.value)"
         }.joined(separator: "\n")
     }
-    
+
     func createAuthorizationHeader(
         algorithm: String,
         credentialScope: String,
@@ -148,6 +150,19 @@ extension AWSSignatureV4 {
 }
 
 extension AWSSignatureV4 {
+    /**
+    Sign a request to be sent to an AWS API.
+
+    - returns:
+    A dictionary with headers to attach to a request
+
+    - parameters:
+        - payload: A hash of this data will be included in the headers
+        - method: Type of HTTP request
+        - path: API call being referenced
+        - query: Additional querystring in key-value format ("?key=value&key2=value2")
+        - headers: HTTP headers added to the request
+    */
     public func sign(
         payload: Payload = .none,
         method: Method = .get,
@@ -158,14 +173,16 @@ extension AWSSignatureV4 {
         let algorithm = "AWS4-HMAC-SHA256"
         let credentialScope = getCredentialScope()
         let payloadHash = try payload.hashed()
-        
+
         var headers = headers
+
         generateHeadersToSign(headers: &headers, host: host, hash: payloadHash)
-        
+
         let sortedHeaders = alphabetize(headers)
         let signedHeaders = sortedHeaders.map { $0.key.lowercased() }.joined(separator: ";")
         let canonicalHeaders = createCanonicalHeaders(sortedHeaders)
-        
+
+        // Task 1 is the Canonical Request
         let canonicalRequest = try getCanonicalRequest(
             payloadHash: payloadHash,
             method: method,
@@ -176,35 +193,39 @@ extension AWSSignatureV4 {
         )
 
         let canonicalHash = try Hash.make(.sha256, canonicalRequest).hexString
-        
+
+        // Task 2 is the String to Sign
         let stringToSign = getStringToSign(
             algorithm: algorithm,
             date: amzDate,
             scope: credentialScope,
             canonicalHash: canonicalHash
         )
-        
+
+        // Task 3 calculates Signature
         let signature = try getSignature(stringToSign)
-        
+
+        //Task 4 Add signing information to the request
         let authorizationHeader = createAuthorizationHeader(
             algorithm: algorithm,
             credentialScope: credentialScope,
             signature: signature,
             signedHeaders: signedHeaders
         )
-      
-      
+
         var requestHeaders: [HeaderKey: String] = [
             "X-Amz-Date": amzDate,
+            "Content-Type": contentType,
             "x-amz-content-sha256": payloadHash,
-            "Authorization": authorizationHeader
+            "Authorization": authorizationHeader,
+            "Host": self.host
         ]
-      
+
         headers.forEach { key, value in
             let headerKey = HeaderKey(stringLiteral: key)
             requestHeaders[headerKey] = value
         }
-      
+
         return requestHeaders
     }
 }
