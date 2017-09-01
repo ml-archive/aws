@@ -32,16 +32,25 @@ public struct S3 {
         )
     }
 
-    public func upload(bytes: Bytes, path: String, access: AccessControlList) throws {
+    public func upload(bytes: Bytes, path: String, access: AccessControlList, mimeType: String? = nil) throws {
         let url = generateURL(for: path)
-        let headers = try signer.sign(
+        
+        let headers: [String : String] = {
+            guard let mimeType = mimeType else {
+                return [:]
+            }
+            return ["Content-Type": mimeType]
+        }()
+        let signedHeaders = try signer.sign(
             payload: .bytes(bytes),
             method: .put,
-            path: path
+            path: path,
+            query: nil,
+            headers: headers
             //TODO(Brett): headers & AccessControlList
         )
 
-        let response = try EngineClient.factory.put(url, headers, Body.data(bytes))
+        let response = try EngineClient.factory.put(url, signedHeaders, Body.data(bytes))
         guard response.status == .ok else {
             guard let bytes = response.body.bytes else {
                 throw Error.invalidResponse(response.status)
