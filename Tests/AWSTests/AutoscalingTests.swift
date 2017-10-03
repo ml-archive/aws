@@ -7,7 +7,7 @@ import Foundation
 
 class AutoscalingTests: XCTestCase {
     static var allTests = [
-        "testGenerateQuery"
+        ("testGenerateQuery", testGenerateQuery)
     ]
 
     func testGenerateQuery() {
