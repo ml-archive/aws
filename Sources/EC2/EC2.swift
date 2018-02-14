@@ -81,29 +81,8 @@ public class EC2 {
     */
     public func modifyInstanceAttribute(instanceId: String, securityGroup: String? = nil) throws -> ModifyInstanceAttributeResponse? {
         let query = generateQuery(for: "ModifyInstanceAttribute", instanceId: instanceId, securityGroup: securityGroup)
-        let headers = try signer.sign(method: .post, path: "/", query: query)
-        let client = try EngineClientFactory().makeClient(hostname: host, port: 443, securityLayer: .tls(Context.init(.client)), proxy: nil)
+        let output = try driver.post(baseURL: baseURL, query: query)
 
-        let version = HTTP.Version(major: 1, minor: 1)
-        print("\(baseURL)/?\(query)")
-        print(headers)
-        let request = HTTP.Request(method: Method.post, uri: "\(baseURL)/?\(query)", version: version, headers: headers, body: Body.data(Bytes([])))
-        let response = try client.respond(to: request)
-
-        guard response.status == .ok else {
-            print("Response error: \(response)")
-            guard let bytes = response.body.bytes else {
-                throw Error.invalidResponse(response.status)
-            }
-
-            throw try ErrorParser.parse(bytes)
-        }
-
-        guard let bytes = response.body.bytes else {
-            throw Error.invalidResponse(.internalServerError)
-        }
-
-        let output = bytes.makeString()
         let xml = SWXMLHash.parse(output)
         let modifyResponse = xml["ModifyInstanceAttributeResponse"]
 

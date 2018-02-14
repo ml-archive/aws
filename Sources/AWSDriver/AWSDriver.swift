@@ -65,10 +65,8 @@ extension AWSDriver {
     func submitRequest(baseURL: String, query: String, method: HTTP.Method) throws -> String {
 
         let headers = try signer.sign(path: "/", query: query)
-        let client = try EngineClientFactory().makeClient(hostname: host, port: 443, securityLayer: .tls(Context.init(.client)), proxy: nil)
+        let client = try EngineClientFactory().makeClient(hostname: host, port: 443, securityLayer: .tls(Context(.client)), proxy: nil)
 
-        print("\(baseURL)/?\(query)")
-        print(headers)
         let version = HTTP.Version(major: 1, minor: 1)
         let request = HTTP.Request(method: Method.get, uri: "\(baseURL)/?\(query)", version: version, headers: headers, body: Body.data(Bytes([])))
         let response = try client.respond(to: request)
