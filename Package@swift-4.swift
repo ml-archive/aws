@@ -15,7 +15,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "AWS", dependencies: ["AutoScaling", "EC2", "S3"]),
-        .target(name: "AutoScaling", dependencies: ["AWSSignatureV4", "SWXMLHash"]),
+        .target(name: "AutoScaling", dependencies: ["AWSSignatureV4", "SWXMLHash", "AWSDriver"]),
         .target(name: "AWSDriver", dependencies: ["Vapor", "AWSSignatureV4",]),
         .target(name: "AWSSignatureV4", dependencies: ["Vapor"]),
         .target(name: "EC2", dependencies: ["AWSDriver"]),

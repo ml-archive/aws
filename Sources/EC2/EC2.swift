@@ -46,11 +46,10 @@ public class EC2 {
         self.host = "\(self.service).\(region.rawValue).amazonaws.com"
         self.baseURL = "https://\(self.host)"
         if driver == nil {
-            self.driver = try AWSDriver()
+            self.driver = try AWSDriver(service: service, region: region)
         } else {
             self.driver = driver!
         }
-        print(self.driver)
         self.signer = AWSSignatureV4(
             service: self.service,
             host: self.host,
@@ -82,13 +81,13 @@ public class EC2 {
     */
     public func modifyInstanceAttribute(instanceId: String, securityGroup: String? = nil) throws -> ModifyInstanceAttributeResponse? {
         let query = generateQuery(for: "ModifyInstanceAttribute", instanceId: instanceId, securityGroup: securityGroup)
-        let headers = try signer.sign(path: "/", query: query)
+        let headers = try signer.sign(method: .post, path: "/", query: query)
         let client = try EngineClientFactory().makeClient(hostname: host, port: 443, securityLayer: .tls(Context.init(.client)), proxy: nil)
 
         let version = HTTP.Version(major: 1, minor: 1)
         print("\(baseURL)/?\(query)")
         print(headers)
-        let request = HTTP.Request(method: Method.get, uri: "\(baseURL)/?\(query)", version: version, headers: headers, body: Body.data(Bytes([])))
+        let request = HTTP.Request(method: Method.post, uri: "\(baseURL)/?\(query)", version: version, headers: headers, body: Body.data(Bytes([])))
         let response = try client.respond(to: request)
 
         guard response.status == .ok else {
@@ -112,22 +111,5 @@ public class EC2 {
             return ModifyInstanceAttributeResponse(requestId: requestId, returnValue: returnValue)
         }
         return nil
-    }
-
-    func describeInstances() throws -> String {
-        //TODO(Brett): wrap this result in a model instead of a string type
-        /*let response =  try AWSDriver().call(
-            method: .get,
-            service: service,
-            host: host,
-            region: region,
-            baseURL: baseURL,
-            key: accessKey,
-            secret: secretKey,
-            requestParam: "Action=DescribeRegions&Version=2015-10-01"
-        )
-
-        return response.description*/
-        return ""
     }
 }

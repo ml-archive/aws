@@ -183,7 +183,7 @@ extension AWSSignatureV4 {
 
         var headers = headers
 
-        try generateHeadersToSign(headers: &headers, host: host, hash: payloadHash)
+        generateHeadersToSign(headers: &headers, host: host, hash: payloadHash)
 
         let sortedHeaders = alphabetize(headers)
         let signedHeaders = sortedHeaders.map { $0.key.lowercased() }.joined(separator: ";")
