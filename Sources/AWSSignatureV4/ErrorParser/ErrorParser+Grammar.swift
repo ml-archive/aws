@@ -7,6 +7,7 @@ extension ErrorParser {
         insert(into: trie, .accessDenied)
         insert(into: trie, .accountProblem)
         insert(into: trie, .ambiguousGrantByEmailAddress)
+        insert(into: trie, .authFailure)
         insert(into: trie, .authorizationHeaderMalformed)
         insert(into: trie, .badDigest)
         insert(into: trie, .bucketAlreadyExists)

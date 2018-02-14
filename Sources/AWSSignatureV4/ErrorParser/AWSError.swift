@@ -2,6 +2,7 @@ public enum AWSError: String {
     case accessDenied = "AccessDenied"
     case accountProblem = "AccountProblem"
     case ambiguousGrantByEmailAddress = "AmbiguousGrantByEmailAddress"
+    case authFailure = "AuthFailure"
     case authorizationHeaderMalformed = "AuthorizationHeaderMalformed"
     case badDigest = "BadDigest"
     case bucketAlreadyExists = "BucketAlreadyExists"

@@ -25,6 +25,7 @@ struct CredentialResponse: Codable {
 
 public enum Error: Swift.Error {
     case roleError // Problem getting IAM role credentials
+    case noRolesPresent // This host does not have an associated Instance profile
 }
 
 struct InstanceProfile {
@@ -38,33 +39,37 @@ struct InstanceProfile {
             throw Error.roleError
         }
         return bytes.makeString()
-
     }
 
     func findInstanceRole() throws -> String {
-        return try queryLocalEndpoint(urlPath: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
-
+        let role = try queryLocalEndpoint(urlPath: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
+        if role.count < 1 {
+            throw Error.noRolesPresent
+        }
+        return role
     }
 
-    func generateIAMCreds() throws -> (String, String) {
+    func generateIAMCreds() throws -> (String, String, String?) {
         let role = try findInstanceRole()
         let credString = try queryLocalEndpoint(urlPath: "http://169.254.169.254/latest/meta-data/iam/security-credentials/\(role)")
         let decoder = JSONDecoder()
         let credentials = try! decoder.decode(CredentialResponse.self, from: credString.data(using: .utf8)!)
-        return (credentials.AccessKeyId, credentials.SecretAccessKey)
+        return (credentials.AccessKeyId, credentials.SecretAccessKey, credentials.Token)
     }
 }
 
 public struct AWSDriver {
     public let accessKey: String
     public let secretKey: String
+    public let token: String?
 
-    public init(accessKey: String? = nil, secretKey: String? = nil) throws {
+    public init(accessKey: String? = nil, secretKey: String? = nil, token: String? = nil) throws {
         if let access = accessKey, let secret = secretKey {
             self.accessKey = access
             self.secretKey = secret
+            self.token = token
         } else {
-            (self.accessKey, self.secretKey) = try InstanceProfile().generateIAMCreds()
+            (self.accessKey, self.secretKey, self.token) = try InstanceProfile().generateIAMCreds()
         }
     }
 }

@@ -26,6 +26,7 @@ public struct AWSSignatureV4 {
     let region: String
     let accessKey: String
     let secretKey: String
+    var token: String?
     let contentType = "application/x-www-form-urlencoded; charset=utf-8"
 
     internal var unitTestDate: Date?
@@ -42,13 +43,15 @@ public struct AWSSignatureV4 {
         host: String,
         region: Region,
         accessKey: String,
-        secretKey: String
+        secretKey: String,
+        token: String? = nil
     ) {
         self.service = service
         self.host = host
         self.region = region.rawValue
         self.accessKey = accessKey
         self.secretKey = secretKey
+        self.token = token
     }
 
     func getStringToSign(
@@ -124,6 +127,10 @@ extension AWSSignatureV4 {
         headers["Host"] = host
         headers["X-Amz-Date"] = amzDate
 
+        if let securityToken = token {
+            headers["X-Amz-Security-Token"] = securityToken
+        }
+
          if hash != "UNSIGNED-PAYLOAD" {
             headers["x-amz-content-sha256"] = hash
         }
@@ -176,7 +183,7 @@ extension AWSSignatureV4 {
 
         var headers = headers
 
-        generateHeadersToSign(headers: &headers, host: host, hash: payloadHash)
+        try generateHeadersToSign(headers: &headers, host: host, hash: payloadHash)
 
         let sortedHeaders = alphabetize(headers)
         let signedHeaders = sortedHeaders.map { $0.key.lowercased() }.joined(separator: ";")

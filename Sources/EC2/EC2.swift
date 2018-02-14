@@ -43,24 +43,31 @@ public class EC2 {
     public init(region: Region, driver: AWSDriver? = nil) throws {
         self.region = region
         self.service = "ec2"
-        self.host = "\(self.service).amazonaws.com"
+        self.host = "\(self.service).\(region.rawValue).amazonaws.com"
         self.baseURL = "https://\(self.host)"
         if driver == nil {
             self.driver = try AWSDriver()
         } else {
             self.driver = driver!
         }
+        print(self.driver)
         self.signer = AWSSignatureV4(
             service: self.service,
             host: self.host,
             region: self.region,
             accessKey: self.driver.accessKey,
-            secretKey: self.driver.secretKey
+            secretKey: self.driver.secretKey,
+            token: self.driver.token
         )
     }
 
-    func generateQuery(for action: String, instanceId: String) -> String {
-        return "Action=\(action)&InstanceID=\(instanceId)&Version=2016-11-15"
+    func generateQuery(for action: String, instanceId: String, securityGroup: String? = nil) -> String {
+        var query = "Action=\(action)&InstanceId=\(instanceId)"
+        if let sg = securityGroup {
+            query = "\(query)&GroupId.1=\(sg)"
+        }
+        query = "\(query)&Version=2016-11-15"
+        return query
     }
 
     /**
@@ -71,17 +78,16 @@ public class EC2 {
 
      - parameters:
         - instanceID: Unique identifier of the form `i-<value>`
+        - securityGroup: Security group to attach to this instance
     */
     public func modifyInstanceAttribute(instanceId: String, securityGroup: String? = nil) throws -> ModifyInstanceAttributeResponse? {
-        var query = generateQuery(for: "ModifyInstanceAttribute", instanceId: instanceId)
-        if let sg = securityGroup {
-            query = "\(query)&GroupId.N=\(sg)"
-        }
-        print("\(baseURL)/?\(query)")
+        let query = generateQuery(for: "ModifyInstanceAttribute", instanceId: instanceId, securityGroup: securityGroup)
         let headers = try signer.sign(path: "/", query: query)
-        let client = try EngineClientFactory.init().makeClient(hostname: host, port: 443, securityLayer: .tls(Context.init(.client)), proxy: nil)
+        let client = try EngineClientFactory().makeClient(hostname: host, port: 443, securityLayer: .tls(Context.init(.client)), proxy: nil)
 
         let version = HTTP.Version(major: 1, minor: 1)
+        print("\(baseURL)/?\(query)")
+        print(headers)
         let request = HTTP.Request(method: Method.get, uri: "\(baseURL)/?\(query)", version: version, headers: headers, body: Body.data(Bytes([])))
         let response = try client.respond(to: request)
 
@@ -120,7 +126,7 @@ public class EC2 {
             secret: secretKey,
             requestParam: "Action=DescribeRegions&Version=2015-10-01"
         )
-        
+
         return response.description*/
         return ""
     }

@@ -3,6 +3,7 @@ import Vapor
 import Core
 import Transport
 import AWSSignatureV4
+import AWSDriver
 import TLS
 import Node
 import SWXMLHash
@@ -33,18 +34,20 @@ public struct AutoScaling {
         case invalidResponse(Status)
     }
 
-    let accessKey: String
-    let secretKey: String
     let region: Region
     let service: String
     let host: String
     let baseURL: String
     let signer: AWSSignatureV4
+    let driver: AWSDriver
 
-    public init(accessKey: String, secretKey: String, region: String) {
-        self.accessKey = accessKey
-        self.secretKey = secretKey
-        self.region = Region(rawValue: region)!
+    public init(region: Region, driver: AWSDriver? = nil) throws {
+        self.region = region
+        if driver == nil {
+            self.driver = try AWSDriver()
+        } else {
+            self.driver = driver!
+        }
         self.service = "autoscaling"
         self.host = "\(self.service).amazonaws.com"
         self.baseURL = "https://\(self.host)"
@@ -52,8 +55,9 @@ public struct AutoScaling {
             service: self.service,
             host: self.host,
             region: self.region,
-            accessKey: accessKey,
-            secretKey: secretKey
+            accessKey: self.driver.accessKey,
+            secretKey: self.driver.secretKey,
+            token: self.driver.token
         )
     }
 
@@ -66,11 +70,11 @@ public struct AutoScaling {
      */
     public func describeAutoScalingGroups(name: String) throws -> [Instance] {
         let query = generateQuery(for: "DescribeAutoScalingGroups", name: name)
-
         let headers = try signer.sign(path: "/", query: query)
+        let client = try EngineClientFactory().makeClient(hostname: host, port: 443, securityLayer: .tls(Context.init(.client)), proxy: nil)
 
-        let client = try EngineClientFactory.init().makeClient(hostname: host, port: 443, securityLayer: .tls(Context.init(.client)), proxy: nil)
-
+        print("\(baseURL)/?\(query)")
+        print(headers)
         let version = HTTP.Version(major: 1, minor: 1)
         let request = HTTP.Request(method: Method.get, uri: "\(baseURL)/?\(query)", version: version, headers: headers, body: Body.data(Bytes([])))
         let response = try client.respond(to: request)
