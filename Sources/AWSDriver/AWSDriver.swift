@@ -62,13 +62,32 @@ public struct AWSDriver {
 }
 
 extension AWSDriver {
-    func submitRequest(baseURL: String, query: String, method: HTTP.Method) throws -> String {
+    func submitRequest(baseURL: String, query: String, method: HTTP.Method, body: String? = nil) throws -> String {
 
-        let headers = try signer.sign(path: "/", query: query)
+        let signerMethod: AWSSignatureV4.Method
+        if method == .post {
+            signerMethod = AWSSignatureV4.Method.post
+        }
+        else {
+            signerMethod = AWSSignatureV4.Method.get
+        }
+
+        let payloadBytes: Bytes
+        let payload: Payload
+        if let messageBody = body {
+            payloadBytes = messageBody.makeBytes()
+            payload = Payload.bytes(payloadBytes)
+        } else {
+            payloadBytes = Bytes([])
+            payload = .none
+        }
+
+        let uri = "\(baseURL)/?\(query)"
+        let headers = try signer.sign(payload: payload, method: signerMethod, path: "/", query: query)
         let client = try EngineClientFactory().makeClient(hostname: host, port: 443, securityLayer: .tls(Context(.client)), proxy: nil)
 
         let version = HTTP.Version(major: 1, minor: 1)
-        let request = HTTP.Request(method: Method.get, uri: "\(baseURL)/?\(query)", version: version, headers: headers, body: Body.data(Bytes([])))
+        let request = HTTP.Request(method: method, uri: uri, version: version, headers: headers, body: Body.data(payloadBytes))
         let response = try client.respond(to: request)
 
         guard response.status == .ok else {
@@ -91,7 +110,7 @@ extension AWSDriver {
         return try submitRequest(baseURL: baseURL, query: query, method: .get)
     }
 
-    public func post(baseURL: String, query: String) throws -> String {
-        return try submitRequest(baseURL: baseURL, query: query, method: .post)
+    public func post(baseURL: String, query: String, body: String) throws -> String {
+        return try submitRequest(baseURL: baseURL, query: query, method: .post, body: body)
     }
 }

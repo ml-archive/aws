@@ -60,13 +60,8 @@ public class EC2 {
         )
     }
 
-    func generateQuery(for action: String, instanceId: String, securityGroup: String? = nil) -> String {
-        var query = "Action=\(action)&InstanceId=\(instanceId)"
-        if let sg = securityGroup {
-            query = "\(query)&GroupId.1=\(sg)"
-        }
-        query = "\(query)&Version=2016-11-15"
-        return query
+    func generateQuery(for action: String) -> String {
+        return "Action=\(action)"
     }
 
     /**
@@ -80,8 +75,15 @@ public class EC2 {
         - securityGroup: Security group to attach to this instance
     */
     public func modifyInstanceAttribute(instanceId: String, securityGroup: String? = nil) throws -> ModifyInstanceAttributeResponse? {
-        let query = generateQuery(for: "ModifyInstanceAttribute", instanceId: instanceId, securityGroup: securityGroup)
-        let output = try driver.post(baseURL: baseURL, query: query)
+        let query = generateQuery(for: "ModifyInstanceAttribute")
+
+        var body = "InstanceId=\(instanceId)&GroupId.1"
+        if let sg = securityGroup {
+            body = "\(body)&GroupId.1=\(sg)"
+        }
+        body = "\(body)&Version=2016-11-15"
+
+        let output = try driver.post(baseURL: baseURL, query: query, body: body)
 
         let xml = SWXMLHash.parse(output)
         let modifyResponse = xml["ModifyInstanceAttributeResponse"]
