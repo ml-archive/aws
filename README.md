@@ -1,9 +1,8 @@
 # AWS
-[![Swift Version](https://img.shields.io/badge/Swift-3.1-brightgreen.svg)](http://swift.org)
+[![Swift Version](https://img.shields.io/badge/Swift-3-brightgreen.svg)](http://swift.org)
 [![Vapor Version](https://img.shields.io/badge/Vapor-2-F6CBCA.svg)](http://vapor.codes)
-[![Linux Build Status](https://img.shields.io/circleci/project/github/nodes-vapor/aws.svg?label=Linux)](https://circleci.com/gh/nodes-vapor/aws)
-[![macOS Build Status](https://img.shields.io/travis/nodes-vapor/aws.svg?label=macOS)](https://travis-ci.org/nodes-vapor/aws)
-[![codebeat badge](https://codebeat.co/badges/52c2f960-625c-4a63-ae63-52a24d747da1)](https://codebeat.co/projects/github-com-nodes-vapor-aws)
+[![Circle CI](https://circleci.com/gh/nodes-vapor/aws/tree/master.svg?style=shield)](https://circleci.com/gh/nodes-vapor/aws)
+[![codebeat badge](https://codebeat.co/badges/255e7772-28ec-4695-bdd5-770cfd676d9c)](https://codebeat.co/projects/github-com-nodes-vapor-aws-master)
 [![codecov](https://codecov.io/gh/nodes-vapor/aws/branch/master/graph/badge.svg)](https://codecov.io/gh/nodes-vapor/aws)
 [![Readme Score](http://readme-score-api.herokuapp.com/score.svg?url=https://github.com/nodes-vapor/aws)](http://clayallsopp.github.io/readme-score?url=https://github.com/nodes-vapor/aws)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/nodes-vapor/aws/master/LICENSE)
@@ -83,6 +82,13 @@ do {
 }
 ```
 
+## 📃 Development
+
+If you want to improve this, you'll need to make sure you're making a copy of OpenSSL available to `swift build` and the toolchain. If you use Xcode, something like the following after `brew install openssl` will work:
+
+```
+swift package -Xswiftc -I/usr/local/Cellar/openssl/1.0.2j/include -Xlinker -L/usr/local/Cellar/openssl/1.0.2j/lib/ generate-xcodeproj
+```
 
 ## 🏆 Credits
 
