@@ -37,8 +37,8 @@ public struct S3 {
         let headers = try signer.sign(
             payload: .bytes(bytes),
             method: .put,
-            path: path
-            //TODO(Brett): headers & AccessControlList
+            path: path,
+            headers: ["x-amz-acl": access.rawValue]
         )
 
         let response = try EngineClient.factory.put(url, headers, Body.data(bytes))
