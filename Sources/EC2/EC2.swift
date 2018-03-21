@@ -6,7 +6,11 @@ import AWSSignatureV4
 import AWSDriver
 import Vapor
 
-public struct ModifyInstanceAttributeResponse {
+public struct ModifyInstanceAttributeResponse: Equatable {
+    public static func ==(lhs: ModifyInstanceAttributeResponse, rhs: ModifyInstanceAttributeResponse) -> Bool {
+        return lhs.requestId == rhs.requestId && lhs.returnValue == rhs.returnValue
+    }
+
     public let requestId: String
     public let returnValue: Bool
 }
@@ -38,17 +42,17 @@ public class EC2 {
     let host: String
     let baseURL: String
     let signer: AWSSignatureV4
-    let driver: AWSDriver
+    let driver: Driver
 
-    public init(region: Region, driver: AWSDriver? = nil) throws {
+    public init(region: Region, driver: Driver? = nil) throws {
         self.region = region
         self.service = "ec2"
         self.host = "\(self.service).\(region.rawValue).amazonaws.com"
         self.baseURL = "https://\(self.host)"
-        if driver == nil {
-            self.driver = try AWSDriver(service: service, region: region)
+        if let driver = driver {
+            self.driver = driver
         } else {
-            self.driver = driver!
+            self.driver = try AWSDriver(service: service, region: region)
         }
         self.signer = AWSSignatureV4(
             service: self.service,

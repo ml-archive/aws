@@ -22,7 +22,8 @@ struct CredentialResponse: Codable {
     }
 }
 
-public struct AWSDriver {
+
+public struct AWSDriver: Driver {
     public enum Error: Swift.Error {
         case invalidResponse(Status)
     }
@@ -33,8 +34,9 @@ public struct AWSDriver {
     let service: String
     let host: String
     let signer: AWSSignatureV4
+    var client: Responder
 
-    public init(service: String, region: Region? = nil, accessKey: String? = nil, secretKey: String? = nil, token: String? = nil) throws {
+    public init(service: String, region: Region? = nil, accessKey: String? = nil, secretKey: String? = nil, token: String? = nil, client: Responder? = nil) throws {
         self.service = service
         var serviceRegion =  Region.usEast1
         if let awsRegion = region {
@@ -43,6 +45,11 @@ public struct AWSDriver {
         } else {
             self.host = "\(self.service).amazonaws.com"
         }
+        if let client = client {
+            self.client = client
+        } else {
+            self.client = try EngineClientFactory().makeClient(hostname: host, port: 443, securityLayer: .tls(Context(.client)), proxy: nil)
+        }
         if let access = accessKey, let secret = secretKey {
             self.accessKey = access
             self.secretKey = secret
@@ -50,6 +57,7 @@ public struct AWSDriver {
         } else {
             (self.accessKey, self.secretKey, self.token) = try InstanceProfile().generateIAMCreds()
         }
+
         self.signer = AWSSignatureV4(
             service: self.service,
             host: self.host,
@@ -64,13 +72,7 @@ public struct AWSDriver {
 extension AWSDriver {
     func submitRequest(baseURL: String, query: String, method: HTTP.Method, body: String? = nil) throws -> String {
 
-        let signerMethod: AWSSignatureV4.Method
-        if method == .post {
-            signerMethod = AWSSignatureV4.Method.post
-        }
-        else {
-            signerMethod = AWSSignatureV4.Method.get
-        }
+        let signerMethod = method == .post ? AWSSignatureV4.Method.post : AWSSignatureV4.Method.get
 
         let payloadBytes: Bytes
         let payload: Payload
@@ -84,7 +86,6 @@ extension AWSDriver {
 
         let uri = "\(baseURL)/?\(query)"
         let headers = try signer.sign(payload: payload, method: signerMethod, path: "/", query: query)
-        let client = try EngineClientFactory().makeClient(hostname: host, port: 443, securityLayer: .tls(Context(.client)), proxy: nil)
 
         let version = HTTP.Version(major: 1, minor: 1)
         let request = HTTP.Request(method: method, uri: uri, version: version, headers: headers, body: Body.data(payloadBytes))

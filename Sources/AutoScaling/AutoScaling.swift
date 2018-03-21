@@ -31,17 +31,14 @@ public struct AutoScaling {
         case ResourceContention // You already have a pending update to an Auto Scaling resource (for example, a group, instance, or load balancer).
     }
 
-    let service: String
-    let host: String
-    let baseURL: String
-    let driver: AWSDriver
+    public static let service = "autoscaling"
+    static let host = "\(AutoScaling.service).amazonaws.com"
+    static let baseURL = "https://\(AutoScaling.host)"
+    let driver: Driver
 
-    public init(driver: AWSDriver? = nil) throws {
-        self.service = "autoscaling"
-        self.host = "\(self.service).amazonaws.com"
-        self.baseURL = "https://\(self.host)"
+    public init(driver: Driver? = nil) throws {
         if driver == nil {
-            self.driver = try AWSDriver(service: service)
+            self.driver = try AWSDriver(service: AutoScaling.service)
         } else {
             self.driver = driver!
         }
@@ -56,7 +53,7 @@ public struct AutoScaling {
      */
     public func describeAutoScalingGroups(name: String) throws -> [Instance] {
         let query = generateQuery(for: "DescribeAutoScalingGroups", name: name)
-        let output = try driver.get(baseURL: baseURL, query: query)
+        let output = try driver.get(baseURL: AutoScaling.baseURL, query: query)
         let xml = SWXMLHash.parse(output)
         let autoscalingGroupXML = xml["DescribeAutoScalingGroupsResponse"]["DescribeAutoScalingGroupsResult"]["AutoScalingGroups"]["member"]
 
